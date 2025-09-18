@@ -14,6 +14,7 @@
             justify-content: center;
             min-height: 100vh;
             text-align: center;
+            position: relative; /* Make body a positioning context for absolute elements */
         }
         h1 {
             margin-bottom: 10px;
@@ -80,10 +81,18 @@
             margin-top: 15px;
             font-size: 18px;
         }
-        #logo {
-            position: fixed;
+        /* New position for the rules button */
+        #rules-container {
+            position: absolute;
             top: 20px;
-            right: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+        /* New position for the logo */
+        #logo {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
             width: 100px;
             z-index: 1000;
         }
@@ -126,7 +135,7 @@
         #data-source {
             position: fixed;
             bottom: 10px;
-            left: 10px;
+            right: 10px; /* Adjusted to be on the right */
             font-size: 10px;
             color: #888;
         }
@@ -166,9 +175,7 @@
     </style>
 </head>
 <body>
-    <img id="logo" src="/static/ReillyLabs_Logo.png" alt="ReillyLabs Logo">
-    
-    <div>
+    <div id="rules-container">
         <button onclick="toggleRules()">Rules</button>
     </div>
 
@@ -176,13 +183,6 @@
     <label for="yearInput">Earliest Year:</label>
     <select id="yearInput"></select>
     <button onclick="startGame()">Start Game</button>
-    <p id="playerPosition"></p>
-    <table id="statsTable">
-        <thead></thead>
-        <tbody></tbody>
-    </table>
-    
-    <p id="feedback"></p>
 
     <div>
         <div class="autocomplete-container">
@@ -193,6 +193,14 @@
         <button onclick="getHint()" id="hintButton" disabled>Get Hint</button>
     </div>
 
+    <p id="feedback"></p>
+    <p id="playerPosition"></p>
+
+    <table id="statsTable">
+        <thead></thead>
+        <tbody></tbody>
+    </table>
+    
     <div id="rulesModal" class="modal">
         <div class="modal-content">
             <span class="close-button" onclick="toggleRules()">&times;</span>
@@ -203,6 +211,8 @@
             <p>4. Guess correctly or run out of guesses to end the game.</p>
         </div>
     </div>
+
+    <img id="logo" src="/static/ReillyLabs_Logo.png" alt="ReillyLabs Logo">
 
     <p id="data-source">
         Player Data from <a href="https://www.pro-football-reference.com/" target="_blank">Pro Football Reference</a>
