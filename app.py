@@ -138,7 +138,11 @@ eligible_players_df = eligible_players_df[eligible_players_df['Player'].isin(eli
 
 for year in years:
     key = str(year)
-    prefiltered_players[key] = eligible_players_df[eligible_players_df['Year'] >= year].copy()
+    # Filter players whose first career year is in or after the selected year
+    valid_players_for_year = eligible_players_df[eligible_players_df['FirstYear'] >= year]['Player'].unique()
+    prefiltered_players[key] = eligible_players_df[eligible_players_df['Player'].isin(valid_players_for_year)].copy()
+    # Now, filter the stats to only show seasons in or after the selected year
+    prefiltered_players[key] = prefiltered_players[key][prefiltered_players[key]['Year'] >= year]
 
 print("All eligible players pre-filtered and stored!")
 
