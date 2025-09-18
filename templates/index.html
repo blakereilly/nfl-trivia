@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FumbLe</title>
     <style>
         body {
@@ -14,24 +15,62 @@
             justify-content: center;
             min-height: 100vh;
             text-align: center;
-            position: relative; /* Make body a positioning context for absolute elements */
+            position: relative;
         }
+
+        /* Top-level containers for better mobile management */
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+            position: absolute;
+            top: 0;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            width: 100%;
+        }
+
         h1 {
+            margin: 0;
             margin-bottom: 10px;
         }
+
         #playerPosition {
-            font-size: 24px;
+            font-size: 20px;
             color: #bbb;
-            margin-bottom: 20px;
+            margin: 10px 0;
             font-weight: bold;
             font-style: italic;
         }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            width: 100%;
+            margin: 0 auto;
+        }
+
         #statsTable {
-            max-width: 90%;
-            margin: 0 auto 20px;
+            width: 100%;
+            margin: 0 auto;
             border-collapse: collapse;
             font-size: 14px;
+            min-width: 600px; /* Ensure table doesn't get too small */
         }
+
         #statsTable th, #statsTable td {
             border: 1px solid #444;
             padding: 8px;
@@ -51,15 +90,15 @@
             background-color: #1f232b;
         }
         .highlight-green {
-            background-color: #4CAF50; /* Green */
+            background-color: #4CAF50;
             color: black;
         }
         .highlight-yellow {
-            background-color: #FFC107; /* Yellow */
+            background-color: #FFC107;
             color: black;
         }
         .highlight-red {
-            background-color: #F44336; /* Light Red */
+            background-color: #F44336;
             color: black;
         }
         input, button, select {
@@ -81,14 +120,14 @@
             margin-top: 15px;
             font-size: 18px;
         }
-        /* New position for the rules button */
+
         #rules-container {
             position: absolute;
             top: 20px;
             left: 20px;
             z-index: 1000;
         }
-        /* New position for the logo */
+
         #logo {
             position: absolute;
             bottom: 20px;
@@ -96,7 +135,23 @@
             width: 100px;
             z-index: 1000;
         }
-        /* Styling for the modal pop-up */
+        
+        #data-source {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            font-size: 10px;
+            color: #888;
+        }
+        #data-source a {
+            color: #2c7be5;
+            text-decoration: none;
+        }
+        #data-source a:hover {
+            text-decoration: underline;
+        }
+
+        /* Modal and autocomplete styles remain the same */
         .modal {
             display: none;
             position: fixed;
@@ -114,7 +169,7 @@
             background-color: #1a1e24;
             padding: 20px;
             border: 1px solid #888;
-            max-width: 500px;
+            max-width: 90%;
             border-radius: 10px;
             position: relative;
             color: white;
@@ -126,30 +181,17 @@
             font-weight: bold;
             cursor: pointer;
         }
-        .close-button:hover,
-        .close-button:focus {
+        .close-button:hover, .close-button:focus {
             color: white;
             text-decoration: none;
             cursor: pointer;
         }
-        #data-source {
-            position: fixed;
-            bottom: 10px;
-            right: 10px; /* Adjusted to be on the right */
-            font-size: 10px;
-            color: #888;
-        }
-        #data-source a {
-            color: #2c7be5;
-            text-decoration: none;
-        }
-        #data-source a:hover {
-            text-decoration: underline;
-        }
-        /* New styles for the suggestions dropdown */
+
         .autocomplete-container {
             position: relative;
             display: inline-block;
+            width: 100%;
+            max-width: 300px;
         }
         #suggestions {
             position: absolute;
@@ -163,7 +205,7 @@
             overflow-y: auto;
             text-align: left;
             box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-            display: none; /* Hide the dropdown by default */
+            display: none;
         }
         #suggestions div {
             padding: 10px;
@@ -171,6 +213,41 @@
         }
         #suggestions div:hover {
             background-color: #2c7be5;
+        }
+
+        /* Media Queries for fine-tuning on smaller screens */
+        @media (max-width: 600px) {
+            body {
+                justify-content: flex-start;
+                min-height: auto;
+                padding-bottom: 150px; /* Add space for bottom elements */
+            }
+            .header-container {
+                position: relative;
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                padding: 10px;
+            }
+            #rules-container {
+                position: relative;
+                top: auto;
+                left: auto;
+                margin-bottom: 10px;
+            }
+            #logo {
+                position: fixed;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 80px;
+            }
+            #data-source {
+                position: fixed;
+                bottom: 5px;
+                right: 5px;
+                font-size: 8px;
+            }
         }
     </style>
 </head>
@@ -180,9 +257,12 @@
     </div>
 
     <h1>FumbLe</h1>
-    <label for="yearInput">Earliest Year:</label>
-    <select id="yearInput"></select>
-    <button onclick="startGame()">Start Game</button>
+    
+    <div class="input-group">
+        <label for="yearInput">Earliest Year:</label>
+        <select id="yearInput"></select>
+        <button onclick="startGame()">Start Game</button>
+    </div>
 
     <div>
         <div class="autocomplete-container">
@@ -196,10 +276,12 @@
     <p id="feedback"></p>
     <p id="playerPosition"></p>
 
-    <table id="statsTable">
-        <thead></thead>
-        <tbody></tbody>
-    </table>
+    <div class="table-container">
+        <table id="statsTable">
+            <thead></thead>
+            <tbody></tbody>
+        </table>
+    </div>
     
     <div id="rulesModal" class="modal">
         <div class="modal-content">
