@@ -8,9 +8,9 @@ app = Flask(__name__)
 app.secret_key = os.urandom(24) # Added to use Flask session
 
 # --- Data Processing and Pre-filtering (Runs Once) ---
+base_dir = os.path.join(os.path.dirname(__file__), 'stats')
 processed_data_path = os.path.join(base_dir, 'combined_stats.csv')
 years = range(2010, 2025)
-base_dir = os.path.join(os.path.dirname(__file__), 'stats')
 
 all_dfs = []
 
