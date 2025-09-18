@@ -127,7 +127,6 @@ prefiltered_players = {}
 player_first_year = combined_df.groupby('Player')['Year'].min().reset_index()
 player_first_year.rename(columns={'Year': 'FirstYear'}, inplace=True)
 eligible_players_df = pd.merge(combined_df, player_first_year, on='Player')
-eligible_players_df.drop(columns='FirstYear', inplace=True)
 top_24_seasons = eligible_players_df[eligible_players_df['PPR_Rank_by_Pos'] <= 24]
 players_with_2_top_24_seasons = top_24_seasons['Player'].value_counts()
 valid_players_24 = players_with_2_top_24_seasons[players_with_2_top_24_seasons >= 2].index.tolist()
@@ -147,8 +146,8 @@ for year in years:
         # Now, filter the stats to only show seasons in or after the selected year
         prefiltered_players[key] = prefiltered_players[key][prefiltered_players[key]['Year'] >= year]
     else:
-        # If no players are found, explicitly set the key to None or an empty DataFrame
-        prefiltered_players[key] = None # Using None is a good way to check later
+        # If no players are found, explicitly set the key to None
+        prefiltered_players[key] = None
         print(f"Warning: No eligible players found for starting year {year}.")
 
 print("All eligible players pre-filtered and stored!")
