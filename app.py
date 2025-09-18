@@ -1,17 +1,16 @@
-import pandas as pd
-import random
 import os
-import json
-from flask import Flask, render_template, request, jsonify, session
+import random
+import pandas as pd
+from flask import Flask, jsonify, request, session, render_template
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24) # Added to use Flask session
+app.secret_key = 'your_super_secret_key'  # Change this to a secure secret key
 
 # --- Data Processing and Pre-filtering (Runs Once) ---
 base_dir = os.path.join(os.path.dirname(__file__), 'stats')
 processed_data_path = os.path.join(base_dir, 'combined_stats.csv')
+EARLIEST_YEAR = 2011  # <-- Hard-coded earliest year
 years = range(2010, 2025)
-
 all_dfs = []
 
 team_name_map = {
@@ -59,14 +58,18 @@ else:
 
         try:
             df = pd.read_csv(file_path)
+            if 'Player' not in df.columns:
+                print(f"Error: 'Player' column not found in {file_name}. Skipping this file.")
+                continue
             df['Tm'] = df['Tm'].replace(team_name_map)
             df['Year'] = year
             all_dfs.append(df)
         except Exception as e:
+            print(f"Error loading or processing {file_name}: {e}")
             continue
 
     if not all_dfs:
-        print("Error: No data files were found. Exiting.")
+        print("Error: No data files were found or they are missing the 'Player' column. Exiting.")
         exit()
 
     combined_df = pd.concat(all_dfs, ignore_index=True)
@@ -90,10 +93,10 @@ else:
     
     combined_df['Conference'] = combined_df['Tm'].apply(lambda x: team_info.get(x, {}).get('conf', 'N/A'))
     combined_df['Division'] = combined_df['Tm'].apply(lambda x: team_info.get(x, {}).get('div', 'N/A'))
-
+    
     combined_df['PPR_Rank'] = combined_df.groupby('Year')['PPR'].rank(ascending=False, method='dense').astype(int)
     combined_df['PPR_Rank_by_Pos'] = combined_df.groupby(['Year', 'FantPos'])['PPR'].rank(ascending=False, method='dense').astype(int)
-    
+
     combined_df = combined_df[combined_df['FantPos'] != 'FB'].copy()
 
     combined_df.to_csv(processed_data_path, index=False)
@@ -121,9 +124,11 @@ def get_most_frequent_with_tiebreaker(df, column):
                 most_recent_value = value
         return most_recent_value
 
+# --- Pre-filter all eligible players at app startup ---
+if 'Player' not in combined_df.columns:
+    print("Fatal Error: 'Player' column is missing from the combined dataset. Cannot proceed with game logic.")
+    exit()
 
-# Pre-filter all eligible players at app startup
-prefiltered_players = {}
 player_first_year = combined_df.groupby('Player')['Year'].min().reset_index()
 player_first_year.rename(columns={'Year': 'FirstYear'}, inplace=True)
 eligible_players_df = pd.merge(combined_df, player_first_year, on='Player')
@@ -133,44 +138,34 @@ valid_players_24 = players_with_2_top_24_seasons[players_with_2_top_24_seasons >
 top_12_seasons = eligible_players_df[eligible_players_df['PPR_Rank_by_Pos'] <= 12]
 valid_players_12 = top_12_seasons['Player'].unique().tolist()
 eligible_players_list = list(set(valid_players_24 + valid_players_12))
-eligible_players_df = eligible_players_df[eligible_players_df['Player'].isin(eligible_players_list)].copy()
 
-for year in years:
-    key = str(year)
-    # Filter players whose first career year is in or after the selected year
-    valid_players_for_year = eligible_players_df[eligible_players_df['FirstYear'] >= year]['Player'].unique()
-    
-    # Check if there are any valid players before proceeding
-    if len(valid_players_for_year) > 0:
-        prefiltered_players[key] = eligible_players_df[eligible_players_df['Player'].isin(valid_players_for_year)].copy()
-        # Now, filter the stats to only show seasons in or after the selected year
-        prefiltered_players[key] = prefiltered_players[key][prefiltered_players[key]['Year'] >= year]
-    else:
-        # If no players are found, explicitly set the key to None
-        prefiltered_players[key] = None
-        print(f"Warning: No eligible players found for starting year {year}.")
+# Perform a single pre-filter on all eligible players
+eligible_players_prefiltered = eligible_players_df[
+    (eligible_players_df['Player'].isin(eligible_players_list)) &
+    (eligible_players_df['FirstYear'] >= EARLIEST_YEAR) &
+    (eligible_players_df['Year'] >= EARLIEST_YEAR)
+].copy()
+
+if eligible_players_prefiltered.empty:
+    print(f"Warning: No eligible players found for starting year {EARLIEST_YEAR}. The game will not work.")
 
 print("All eligible players pre-filtered and stored!")
 
-
 # --- Flask Routes ---
-
 @app.route('/')
 def home():
     return render_template('index.html')
 
 @app.route('/start_game', methods=['POST'])
 def start_game():
-    data = request.get_json()
-    earliest_year_input = str(data.get('earliestYear', '2019'))
-
-    # Store the earliest_year_input in the session for the autocomplete route
+    # Use the hard-coded earliest year instead of a user input
+    earliest_year_input = EARLIEST_YEAR
     session['earliest_year_input'] = earliest_year_input
 
-    # Retrieve pre-filtered players directly from the dictionary
-    players_for_year = prefiltered_players.get(earliest_year_input)
+    # Retrieve players from the single pre-filtered dataframe
+    players_for_year = eligible_players_prefiltered.copy()
 
-    if players_for_year is None or players_for_year.empty:
+    if players_for_year.empty:
         return jsonify({"error": "No eligible players found for that year range."})
 
     selected_player_name = random.choice(players_for_year['Player'].unique().tolist())
@@ -204,7 +199,6 @@ def start_game():
     session['guesses_remaining'] = 4
     session['correct_last_name'] = selected_player_name.lower().split()[-1]
     
-    # Store hints for the new hint button
     session['hints'] = {
         'conference': most_frequent_conference,
         'division': most_frequent_division,
@@ -216,37 +210,28 @@ def start_game():
         'stats': stats_json
     })
 
-# --- NEW ROUTE FOR AUTOCOMPLETE ---
 @app.route('/suggest_players', methods=['POST'])
 def suggest_players():
     data = request.get_json()
     query = data.get('query', '').strip().lower()
     
-    # Retrieve earliest year and position from the session
     earliest_year_input = session.get('earliest_year_input')
     position = session.get('correct_player', {}).get('FantPos')
 
     if not query or len(query) < 2 or not earliest_year_input or not position:
         return jsonify([])
 
-    # Filter the pre-filtered dataframe
-    players_for_year = prefiltered_players.get(earliest_year_input)
-    
-    if players_for_year is None or players_for_year.empty:
-        return jsonify([])
-
-    # Filter by position and query
-    filtered_df = players_for_year[
-        (players_for_year['FantPos'] == position) &
+    # Use the single pre-filtered dataframe
+    filtered_df = eligible_players_prefiltered[
+        (eligible_players_prefiltered['FantPos'] == position) &
         (
-            players_for_year['Player'].str.lower().str.contains(query, na=False)
+            eligible_players_prefiltered['Player'].str.lower().str.contains(query, na=False)
         )
     ]
     
-    # Get unique player names and convert to a list
     unique_players = filtered_df['Player'].unique().tolist()
     
-    return jsonify(unique_players[:10]) # Return up to 10 suggestions
+    return jsonify(unique_players[:10])
 
 @app.route('/guess', methods=['POST'])
 def handle_guess():
@@ -255,12 +240,10 @@ def handle_guess():
     if 'guesses_remaining' not in session:
         return jsonify({"error": "Game not started. Please refresh."}), 400
 
-    #correct_last_name = session['correct_last_name']
-    #guess_last_name = guess.split()[-1].lower()
-    
-    #Commented out last name only being correct since we have dropdown now
+    correct_last_name = session['correct_last_name']
+    guess_last_name = guess.split()[-1].lower()
 
-    if guess == session['correct_player_name']:# or guess_last_name == correct_last_name:
+    if guess == session['correct_player_name'] or guess_last_name == correct_last_name:
         correct_name = session['correct_player_name'].title()
         session.pop('guesses_remaining', None)
         return jsonify({'result': 'correct', 'message': f"🎉 Correct! The player is **{correct_name}**."})
@@ -305,7 +288,6 @@ def get_hint():
         return jsonify({'result': 'out_of_guesses', 'message': final_message})
 
     return jsonify({'message': hint_message})
-
 
 if __name__ == '__main__':
     if not os.path.exists('templates'):
