@@ -8,9 +8,10 @@ app = Flask(__name__)
 app.secret_key = os.urandom(24) # Added to use Flask session
 
 # --- Data Processing and Pre-filtering (Runs Once) ---
-processed_data_path = r'C:\Users\Blake\Desktop\Projects\Sleepy\combined_stats.csv'
+processed_data_path = os.path.join(base_dir, 'combined_stats.csv')
 years = range(2010, 2025)
-base_dir = r'C:\Users\Blake\Desktop\Projects\Sleepy\stats'
+base_dir = os.path.join(os.path.dirname(__file__), 'stats')
+
 all_dfs = []
 
 team_name_map = {
@@ -299,4 +300,4 @@ def get_hint():
 if __name__ == '__main__':
     if not os.path.exists('templates'):
         os.makedirs('templates')
-    app.run(debug=True, port=5000)
+    #app.run(debug=True, port=5000)
