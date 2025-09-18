@@ -2,10 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FumbLe</title>
     <style>
-        /* Base styles */
         body {
             font-family: Arial, sans-serif;
             background: #10141a;
@@ -16,43 +14,28 @@
             justify-content: center;
             min-height: 100vh;
             text-align: center;
-            padding: 20px;
-            box-sizing: border-box; /* Ensures padding doesn't cause overflow */
         }
-        
         h1 {
             margin-bottom: 10px;
         }
-        
         #playerPosition {
-            font-size: 20px; /* Slightly smaller for mobile */
+            font-size: 24px;
             color: #bbb;
             margin-bottom: 20px;
             font-weight: bold;
             font-style: italic;
         }
-        
-        /* Table styles */
         #statsTable {
-            width: 100%; /* Use 100% width for mobile */
-            max-width: 900px; /* Keep a max-width for desktop */
+            max-width: 90%;
             margin: 0 auto 20px;
             border-collapse: collapse;
-            font-size: 12px; /* Smaller font size for table content */
-            overflow-x: auto; /* Add horizontal scroll for the table on small screens */
-            display: block; /* Allows overflow-x to work */
+            font-size: 14px;
         }
-
-        #statsTable table {
-            width: 100%;
-        }
-
         #statsTable th, #statsTable td {
             border: 1px solid #444;
             padding: 8px;
             white-space: nowrap;
         }
-        
         #statsTable th {
             background-color: #2c7be5;
             color: white;
@@ -60,80 +43,51 @@
             padding-bottom: 12px;
             text-align: left;
         }
-        
         #statsTable tr:nth-child(even) {
             background-color: #1a1e24;
         }
-        
         #statsTable tr:hover {
             background-color: #1f232b;
         }
-        
         .highlight-green {
-            background-color: #4CAF50;
+            background-color: #4CAF50; /* Green */
             color: black;
         }
-        
         .highlight-yellow {
-            background-color: #FFC107;
+            background-color: #FFC107; /* Yellow */
             color: black;
         }
-        
         .highlight-red {
-            background-color: #F44336;
+            background-color: #F44336; /* Light Red */
             color: black;
         }
-        
-        /* Input and button styles */
         input, button, select {
-            padding: 12px; /* Larger tap targets */
+            padding: 10px;
             font-size: 16px;
-            margin: 5px 0; /* Adjust margin for stacked layout */
+            margin: 5px;
             border-radius: 5px;
             border: none;
-            width: 100%; /* Make them full-width */
-            box-sizing: border-box;
         }
-        
         button {
             background-color: #2c7be5;
             color: white;
             cursor: pointer;
         }
-        
         button:hover {
             background-color: #1a5bb8;
         }
-        
         #feedback {
             margin-top: 15px;
-            font-size: 16px;
+            font-size: 18px;
         }
-        
-        /* Logo and data source */
         #logo {
-            position: static; /* Make it part of the normal flow */
-            width: 80px; /* Adjust size for mobile */
-            margin-bottom: 20px;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 100px;
+            z-index: 1000;
         }
-        
-        #data-source {
-            position: static;
-            margin-top: 20px;
-            font-size: 10px;
-            color: #888;
-        }
-        
-        #data-source a {
-            color: #2c7be5;
-            text-decoration: none;
-        }
-        
-        #data-source a:hover {
-            text-decoration: underline;
-        }
-        
-        /* Modal styles */
+        /* Styling for the modal pop-up */
         .modal {
             display: none;
             position: fixed;
@@ -147,17 +101,15 @@
             justify-content: center;
             align-items: center;
         }
-        
         .modal-content {
             background-color: #1a1e24;
             padding: 20px;
             border: 1px solid #888;
-            max-width: 90%;
+            max-width: 500px;
             border-radius: 10px;
             position: relative;
             color: white;
         }
-        
         .close-button {
             color: #aaa;
             float: right;
@@ -165,21 +117,31 @@
             font-weight: bold;
             cursor: pointer;
         }
-        
         .close-button:hover,
         .close-button:focus {
             color: white;
             text-decoration: none;
             cursor: pointer;
         }
-        
-        /* Suggestions dropdown */
+        #data-source {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            font-size: 10px;
+            color: #888;
+        }
+        #data-source a {
+            color: #2c7be5;
+            text-decoration: none;
+        }
+        #data-source a:hover {
+            text-decoration: underline;
+        }
+        /* New styles for the suggestions dropdown */
         .autocomplete-container {
-            width: 100%; /* Ensure container fills space */
             position: relative;
             display: inline-block;
         }
-        
         #suggestions {
             position: absolute;
             z-index: 99;
@@ -192,14 +154,12 @@
             overflow-y: auto;
             text-align: left;
             box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-            display: none;
+            display: none; /* Hide the dropdown by default */
         }
-        
         #suggestions div {
             padding: 10px;
             cursor: pointer;
         }
-        
         #suggestions div:hover {
             background-color: #2c7be5;
         }
@@ -217,12 +177,10 @@
     <select id="yearInput"></select>
     <button onclick="startGame()">Start Game</button>
     <p id="playerPosition"></p>
-    <div style="overflow-x: auto;">
-        <table id="statsTable">
-            <thead></thead>
-            <tbody></tbody>
-        </table>
-    </div>
+    <table id="statsTable">
+        <thead></thead>
+        <tbody></tbody>
+    </table>
     
     <p id="feedback"></p>
 
@@ -251,7 +209,6 @@
     </p>
 
     <script>
-        // Your existing JavaScript remains the same.
         const yearSelect = document.getElementById("yearInput");
         for (let i = 2010; i <= 2024; i++) {
             const option = document.createElement("option");
