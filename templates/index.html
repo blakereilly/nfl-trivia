@@ -422,6 +422,9 @@
             const guess = document.getElementById("guessInput").value.trim();
             if (!guess) return;
 
+            // --- ADD THIS LINE ---
+            document.getElementById("guessInput").value = ''; // Clears the input field for the next guess
+            
             const response = await fetch('/guess', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
