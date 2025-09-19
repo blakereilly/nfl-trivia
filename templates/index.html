@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FumbLe</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body {
             font-family: 'Inter', sans-serif;
             background: linear-gradient(135deg, #10141a 0%, #1a1e24 100%);
@@ -17,8 +16,7 @@
             justify-content: flex-start;
             min-height: 100vh;
             text-align: center;
-            padding: 20px;
-            box-sizing: border-box;
+            position: relative;
         }
 
         /* Top-level containers for better mobile management */
@@ -39,8 +37,6 @@
             align-items: center;
             padding: 20px;
             width: 100%;
-            max-width: 900px;
-            margin-top: 80px;
         }
 
         h1 {
@@ -80,7 +76,7 @@
             width: 100%;
             border-collapse: collapse;
             font-size: 14px;
-            min-width: 600px;
+            min-width: 600px; /* Ensure table doesn't get too small */
         }
 
         #statsTable th, #statsTable td {
@@ -215,15 +211,17 @@
             height: 100%;
             overflow: auto;
             background-color: rgba(0,0,0,0.7);
-            justify-content: center;
+            /* Changed to flex for centering */
+            display: none;
             align-items: center;
+            justify-content: center;
         }
         .modal-content {
             background-color: #1a1e24;
-            padding: 25px;
-            border: 1px solid #2c7be5;
+            padding: 20px;
+            border: 1px solid #888;
             max-width: 90%;
-            border-radius: 12px;
+            border-radius: 10px;
             position: relative;
             color: white;
             text-align: left;
@@ -277,7 +275,7 @@
             body {
                 justify-content: flex-start;
                 min-height: auto;
-                padding-bottom: 150px;
+                padding-bottom: 150px; /* Add space for bottom elements */
             }
             .header-container {
                 position: relative;
@@ -287,7 +285,9 @@
                 padding: 10px;
             }
             #rules-container {
-                position: static;
+                position: relative;
+                top: auto;
+                left: auto;
                 margin-bottom: 10px;
             }
             #logo {
@@ -314,26 +314,28 @@
     <h1>FumbLe</h1>
     
     <div class="input-group">
+        <label for="yearInput">Earliest Year:</label>
+        <select id="yearInput"></select>
         <button onclick="startGame()">Start Game</button>
     </div>
 
-        <div id="game-interface" style="display:none;">
-            <div class="game-controls">
-                <div class="autocomplete-container">
-                    <input type="text" id="guessInput" placeholder="Enter player name" disabled>
-                    <div id="suggestions"></div>
-                </div>
-                <button id="guessButton" disabled>Guess</button>
-                <button id="hintButton" disabled>Get Hint</button>
-            </div>
-            <p id="feedback"></p>
-            <div class="table-container">
-                <table id="statsTable">
-                    <thead></thead>
-                    <tbody></tbody>
-                </table>
-            </div>
+    <div>
+        <div class="autocomplete-container">
+            <input type="text" id="guessInput" placeholder="Enter player name" disabled>
+            <div id="suggestions"></div>
         </div>
+        <button onclick="submitGuess()" id="guessButton" disabled>Guess</button>
+        <button onclick="getHint()" id="hintButton" disabled>Get Hint</button>
+    </div>
+
+    <p id="feedback"></p>
+    <p id="playerPosition"></p>
+
+    <div class="table-container">
+        <table id="statsTable">
+            <thead></thead>
+            <tbody></tbody>
+        </table>
     </div>
     
     <div id="rulesModal" class="modal">
@@ -521,7 +523,8 @@
         
         function toggleRules() {
             const modal = document.getElementById("rulesModal");
-            modal.style.display = modal.style.display === "block" ? "none" : "block";
+            // Use flex display for the modal for centering
+            modal.style.display = modal.style.display === "flex" ? "none" : "flex";
         }
         
         let debounceTimeout;
