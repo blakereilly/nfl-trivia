@@ -322,9 +322,9 @@
         }
 
         const columnMap = {
-            "Year": "Year", "FantPos": "Pos", "G": "Games", "PPR": "PPR Pts", "PPR_Rank_by_Pos": "PPR Rank",
-            "PassYds": "Pass Yds", "PassTD": "Pass TDs", "Rec": "Rec", "RecYds": "Rec Yds", "RecTD": "Rec TDs",
-            "RushYds": "Rush Yds", "RushTD": "Rush TDs",
+            "Year": "Yr", "FantPos": "Pos", "G": "Games", "PPR": "PPR Pts", "PPR_Rank_by_Pos": "PPR Rank",
+            "PassYds": "Pass Yd", "PassTD": "Pass TD", "Rec": "Rec", "RecYds": "Rec Yd", "RecTD": "Rec TD",
+            "RushYds": "Rush Yd", "RushTD": "Rush TD",
         };
 
         let mysteryPlayerPos = null;
@@ -379,7 +379,9 @@
 
             if (!stats || stats.length === 0) return;
 
-            let desiredOrder = ["Year", "FantPos", "G", "PPR", "PPR_Rank_by_Pos"];
+            // --- MODIFIED THIS LINE ---
+            // Removed "FantPos" from the array to hide the column
+            let desiredOrder = ["Year", "G", "PPR", "PPR_Rank_by_Pos"]; 
             
             if (stats[0].FantPos === "QB") {
                 desiredOrder.push("PassYds", "PassTD", "RushYds", "RushTD");
@@ -404,7 +406,7 @@
                         const td = document.createElement("td");
                         const value = statRow[headerText] !== null && statRow[headerText] !== undefined ? statRow[headerText] : 'N/A';
                         td.textContent = value;
-    
+
                         if (headerText === 'PPR_Rank_by_Pos' && !isNaN(value)) {
                             const rank = parseInt(value, 10);
                             if (rank <= 12) td.classList.add('highlight-green');
