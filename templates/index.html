@@ -6,17 +6,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FumbLe</title>
     <style>
+        /* ADDED FOR BETTER LAYOUT CONTROL */
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
             background: linear-gradient(135deg, #10141a 0%, #1a1e24 100%);
             color: #f5f5f5;
+        }
+
+        /* NEW: A robust wrapper to control the entire page layout */
+        .page-wrapper {
+            position: relative;
+            width: 100%;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-start;
+            justify-content: center;
             min-height: 100vh;
             text-align: center;
             position: relative;
+            margin: 0; /* Removed default body margin */
         }
 
         /* Top-level containers for better mobile management */
@@ -28,24 +41,19 @@
             box-sizing: border-box;
             position: absolute;
             top: 0;
-            left: 0;
         }
 
         .main-content {
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 20px;
             width: 100%;
+            max-width: 1200px; /* Optional: constrain max width on large screens */
         }
 
         h1 {
-            font-size: 3rem;
-            font-weight: 700;
             margin: 0;
-            margin-bottom: 20px;
-            color: #2c7be5;
-            text-shadow: 0 4px 10px rgba(44, 123, 229, 0.3);
+            margin-bottom: 10px;
         }
 
         #playerPosition {
@@ -65,18 +73,16 @@
         }
 
         .table-container {
-            overflow-x: auto;
+            overflow-x: auto; /* Allows only the table to scroll horizontally */
             width: 100%;
-            margin: 20px 0;
-            border-radius: 12px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            margin: 0 auto;
         }
 
         #statsTable {
             width: 100%;
             border-collapse: collapse;
             font-size: 14px;
-            min-width: 600px; /* Ensure table doesn't get too small */
+            min-width: 600px; /* This is fine now because its parent container will scroll */
         }
 
         #statsTable th, #statsTable td {
@@ -89,8 +95,9 @@
         #statsTable th {
             background-color: #2c7be5;
             color: white;
-            font-weight: 700;
-            text-transform: uppercase;
+            padding-top: 12px;
+            padding-bottom: 12px;
+            text-align: left;
         }
 
         #statsTable tr:nth-child(even) {
@@ -165,10 +172,7 @@
 
         #feedback {
             margin-top: 15px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            min-height: 40px;
-            color: #f5f5f5;
+            font-size: 18px;
         }
 
         #rules-container {
@@ -200,7 +204,6 @@
             text-decoration: underline;
         }
 
-        /* Modal and autocomplete styles remain the same */
         .modal {
             display: none;
             position: fixed;
@@ -211,16 +214,18 @@
             height: 100%;
             overflow: auto;
             background-color: rgba(0,0,0,0.7);
-            /* Changed to flex for centering */
-            display: none;
             align-items: center;
             justify-content: center;
+        }
+        .modal.active {
+            display: flex;
         }
         .modal-content {
             background-color: #1a1e24;
             padding: 20px;
             border: 1px solid #888;
-            max-width: 90%;
+            width: 90%; /* Changed from max-width for better mobile fit */
+            max-width: 500px;
             border-radius: 10px;
             position: relative;
             color: white;
@@ -234,11 +239,6 @@
             right: 15px;
             font-size: 28px;
             font-weight: bold;
-            cursor: pointer;
-        }
-        .close-button:hover, .close-button:focus {
-            color: white;
-            text-decoration: none;
             cursor: pointer;
         }
 
@@ -271,11 +271,15 @@
             background-color: #2c7be5;
         }
 
+        /* Media Queries for fine-tuning on smaller screens */
         @media (max-width: 600px) {
             body {
                 justify-content: flex-start;
-                min-height: auto;
-                padding-bottom: 150px; /* Add space for bottom elements */
+                padding-top: 20px; /* Add space at the top */
+                padding-bottom: 100px; /* Add space for bottom elements */
+            }
+            .main-content {
+                padding-top: 70px; /* Push content below the header */
             }
             .header-container {
                 position: relative;
@@ -285,88 +289,94 @@
                 padding: 10px;
             }
             #rules-container {
-                position: relative;
-                top: auto;
-                left: auto;
-                margin-bottom: 10px;
+                position: absolute; /* Re-position within the viewport */
+                top: 10px;
+                left: 10px;
             }
             #logo {
-                position: fixed;
+                position: fixed; /* Keep it in view */
                 bottom: 20px;
                 left: 50%;
                 transform: translateX(-50%);
                 width: 80px;
             }
             #data-source {
-                position: fixed;
+                position: fixed; /* Keep it in view */
                 bottom: 5px;
                 right: 5px;
                 font-size: 8px;
+            }
+            #rules-container {
+                top: 10px;
+                left: 10px;
             }
         }
     </style>
 </head>
 <body>
     <div id="rules-container">
-        <button id="rules-button">Rules</button>
+        <button onclick="toggleRules()">Rules</button>
     </div>
 
-    <h1>FumbLe</h1>
-    
-    <div class="input-group">
-        <label for="yearInput">Earliest Year:</label>
-        <select id="yearInput"></select>
-        <button onclick="startGame()">Start Game</button>
-    </div>
-
-    <div>
-        <div class="autocomplete-container">
-            <input type="text" id="guessInput" placeholder="Enter player name" disabled>
-            <div id="suggestions"></div>
+    <div class="main-content">
+        <h1>FumbLe</h1>
+        
+        <div class="input-group">
+            <label for="yearInput">Earliest Year:</label>
+            <select id="yearInput"></select>
+            <button onclick="startGame()">Start Game</button>
         </div>
-        <button onclick="submitGuess()" id="guessButton" disabled>Guess</button>
-        <button onclick="getHint()" id="hintButton" disabled>Get Hint</button>
-    </div>
 
-    <p id="feedback"></p>
-    <p id="playerPosition"></p>
+        <div>
+            <div class="autocomplete-container">
+                <input type="text" id="guessInput" placeholder="Enter player name" disabled>
+                <div id="suggestions"></div>
+            </div>
+            <button onclick="submitGuess()" id="guessButton" disabled>Guess</button>
+            <button onclick="getHint()" id="hintButton" disabled>Get Hint</button>
+        </div>
 
-    <div class="table-container">
-        <table id="statsTable">
-            <thead></thead>
-            <tbody></tbody>
-        </table>
+        <p id="feedback"></p>
+        <p id="playerPosition"></p>
+
+        <div class="table-container">
+            <table id="statsTable">
+                <thead></thead>
+                <tbody></tbody>
+            </table>
+        </div>
     </div>
     
     <div id="rulesModal" class="modal">
         <div class="modal-content">
-            <span class="close-button">&times;</span>
+            <span class="close-button" onclick="toggleRules()">&times;</span>
             <h2>How to Play FumbLe</h2>
             <p>1. A player's position and career stats will be displayed. Your goal is to guess the NFL player's name.</p>
-            <p>2. You have 4 guesses. Using the "Get Hint" button will take away one of your guesses.</p>
+            <p>2. You get 4 guesses. If you are stuck, you can use the "Get Hint" button but it will take away one of your guesses.</p>
             <p>3. You can guess a player by their full name or last name only. Entries are not case sensitive.</p>
             <p>4. Guess correctly or run out of guesses to end the game.</p>
         </div>
     </div>
-    
+
+    <img id="logo" src="/static/ReillyLabs_Logo.png" alt="ReillyLabs Logo">
+
     <p id="data-source">
         Player Data from <a href="https://www.pro-football-reference.com/" target="_blank">Pro Football Reference</a>
     </p>
 
     <script>
+        const yearSelect = document.getElementById("yearInput");
+        for (let i = 2010; i <= 2024; i++) {
+            const option = document.createElement("option");
+            option.value = i;
+            option.textContent = i;
+            yearSelect.appendChild(option);
+        }
+
         const columnMap = {
-            "Year": "Year",
-            "FantPos": "Pos",
-            "G": "Games",
-            "PPR": "PPR Pts",
-            "PPR_Rank_by_Pos": "PPR Rank",
-            "PassYds": "Pass Yds",
-            "PassTD": "Pass TDs",
-            "Rec": "Rec",
-            "RecYds": "Rec Yds",
-            "RecTD": "Rec TDs",
-            "RushYds": "Rush Yds",
-            "RushTD": "Rush TDs",
+            "Year": "Year", "FantPos": "Pos", "G": "Games", "PPR": "PPR Pts", "PPR_Rank_by_Pos": "PPR Rank",
+            "PassYds": "Pass Yds", "PassTD": "Pass TDs", "Rec": "Rec", "RecYds": "Rec Yds", "RecTD": "Rec TDs",
+            "RushYds": "Rush Yds", "RushTD": "Rush TDs",
         };
 
             const startScreen = document.getElementById('start-screen');
@@ -422,36 +432,39 @@
             document.getElementById("statsTable").style.display = 'none';
             document.getElementById("suggestions").innerHTML = '';
             document.getElementById("suggestions").style.display = 'none';
+            document.querySelector("#statsTable tbody").innerHTML = '';
+            document.querySelector("#statsTable thead").innerHTML = '';
+
 
             const response = await fetch('/start_game', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ earliestYear: year })
             });
             const data = await response.json();
 
-                if (data.error) {
-                    feedback.textContent = data.error;
-                    toggleControls(false);
-                    return;
-                }
-                
-                startScreen.style.display = 'none';
-                gameInterface.style.display = 'block';
-
-                playerPositionDiv.textContent = `Position: ${data.position}`;
-                renderTable(data.stats);
-                feedback.textContent = "Guess the player based on their stats:";
-                
-                guessInput.value = "";
-                toggleControls(false);
-                statsTable.style.display = 'table';
+            if (data.error) {
+                document.getElementById("feedback").textContent = data.error;
+                return;
             }
+
+            mysteryPlayerPos = data.position;
+            document.getElementById("playerPosition").textContent = `Position: ${mysteryPlayerPos}`;
+            renderTable(data.stats);
+            document.getElementById("feedback").textContent = "Guess the player based on their stats:";
+            
+            document.getElementById("guessInput").value = "";
+            document.getElementById("guessInput").disabled = false;
+            document.getElementById("guessButton").disabled = false;
+            document.getElementById("hintButton").disabled = false;
+            document.getElementById("statsTable").style.display = 'table';
+        }
 
             function renderTable(stats) {
                 statsTableBody.innerHTML = '';
                 statsTableHead.innerHTML = '';
 
-                if (stats.length === 0) return;
+            if (stats.length === 0) return;
 
                 let desiredOrder = ["Year", "FantPos", "G", "PPR", "PPR_Rank_by_Pos"];
                 
@@ -461,35 +474,35 @@
                     desiredOrder.push("Rec", "RecYds", "RecTD", "RushYds", "RushTD");
                 }
 
-                const headerRow = document.createElement("tr");
+            const headerRow = document.createElement("tr");
+            desiredOrder.forEach(headerText => {
+                const th = document.createElement("th");
+                th.textContent = columnMap[headerText] || headerText;
+                headerRow.appendChild(th);
+            });
+            tableHead.appendChild(headerRow);
+
+            stats.forEach(statRow => {
+                const row = document.createElement("tr");
                 desiredOrder.forEach(headerText => {
-                    const th = document.createElement("th");
-                    th.textContent = columnMap[headerText] || headerText;
-                    headerRow.appendChild(th);
-                });
-                statsTableHead.appendChild(headerRow);
+                    const td = document.createElement("td");
+                    td.textContent = statRow[headerText];
 
-                stats.forEach(statRow => {
-                    const row = document.createElement("tr");
-                    desiredOrder.forEach(headerText => {
-                        const td = document.createElement("td");
-                        td.textContent = statRow[headerText];
-
-                        if (headerText === 'PPR_Rank_by_Pos') {
-                            const rank = parseInt(statRow[headerText]);
-                            if (rank <= 12) {
-                                td.classList.add('highlight-green');
-                            } else if (rank > 12 && rank <= 24) {
-                                td.classList.add('highlight-yellow');
-                            } else {
-                                td.classList.add('highlight-red');
-                            }
+                    if (headerText === 'PPR_Rank_by_Pos') {
+                        const rank = parseInt(statRow[headerText]);
+                        if (rank <= 12) {
+                            td.classList.add('highlight-green');
+                        } else if (rank > 12 && rank <= 24) {
+                            td.classList.add('highlight-yellow');
+                        } else {
+                            td.classList.add('highlight-red');
                         }
-                        row.appendChild(td);
-                    });
-                    statsTableBody.appendChild(row);
+                    }
+                    row.appendChild(td);
                 });
-            }
+                tableBody.appendChild(row);
+            });
+        }
 
             async function submitGuess() {
                 const guess = guessInput.value.trim();
@@ -523,8 +536,7 @@
         
         function toggleRules() {
             const modal = document.getElementById("rulesModal");
-            // Use flex display for the modal for centering
-            modal.style.display = modal.style.display === "flex" ? "none" : "flex";
+            modal.classList.toggle("active");
         }
         
         let debounceTimeout;
@@ -542,7 +554,6 @@
             const query = guessInput.value.trim();
             
             if (query.length < 2) {
-                suggestionsDiv.innerHTML = '';
                 suggestionsDiv.style.display = 'none';
                 return;
             }
@@ -557,29 +568,38 @@
             renderSuggestions(players);
         }
 
-            function renderSuggestions(players) {
-                suggestionsDiv.innerHTML = '';
-                if (players.length > 0) {
-                    players.forEach(player => {
-                        const suggestion = document.createElement('div');
-                        suggestion.textContent = player;
-                        suggestion.addEventListener('click', () => {
-                            guessInput.value = player;
-                            suggestionsDiv.innerHTML = '';
-                            suggestionsDiv.style.display = 'none';
-                        });
-                        suggestionsDiv.appendChild(suggestion);
+        function renderSuggestions(players) {
+            suggestionsDiv.innerHTML = '';
+            if (players.length > 0) {
+                players.forEach(player => {
+                    const suggestion = document.createElement('div');
+                    suggestion.textContent = player;
+                    suggestion.addEventListener('click', () => {
+                        guessInput.value = player;
+                        suggestionsDiv.innerHTML = '';
+                        suggestionsDiv.style.display = 'none';
                     });
-                    suggestionsDiv.style.display = 'block';
-                } else {
-                    suggestionsDiv.style.display = 'none';
-                }
+                    suggestionsDiv.appendChild(suggestion);
+                });
+                suggestionsDiv.style.display = 'block';
+            } else {
+                suggestionsDiv.style.display = 'none';
             }
+        }
 
-            function toggleControls(disable) {
-                guessInput.disabled = disable;
-                guessButton.disabled = disable;
-                hintButton.disabled = disable;
+        guessInput.addEventListener("input", debounce(handleGuessInput, 300));
+
+        document.body.addEventListener('click', (event) => {
+            if (!suggestionsDiv.contains(event.target) && event.target !== guessInput) {
+                suggestionsDiv.innerHTML = '';
+                suggestionsDiv.style.display = 'none';
+            }
+        });
+        
+        guessInput.addEventListener("keydown", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                submitGuess();
             }
         });
     </script>
