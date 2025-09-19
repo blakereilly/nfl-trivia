@@ -25,7 +25,7 @@
             font-weight: bold; font-style: italic;
         }
         .game-controls {
-            display: flex; flex-direction: column; align-items: center; margin-bottom: 15px;
+            display: flex; flex-direction: column; align-items: center; margin-bottom: 15px; width: 100%; max-width: 300px;
         }
         .table-container {
             overflow-x: auto; width: 100%; margin: 15px 0;
@@ -45,13 +45,13 @@
         .highlight-yellow { background-color: #FFC107; color: black; }
         .highlight-red { background-color: #F44336; color: black; }
         input, button, select {
-            padding: 10px; font-size: 16px; margin: 5px; border-radius: 5px; border: none;
+            padding: 10px; font-size: 16px; margin: 5px; border-radius: 5px; border: none; width: 100%;
         }
         button { background-color: #2c7be5; color: white; cursor: pointer; }
         button:hover { background-color: #1a5bb8; }
+        button:disabled { background-color: #555; cursor: not-allowed; }
         #feedback { margin-top: 15px; font-size: 18px; min-height: 25px; }
         
-        /* MODIFIED: Rules container and button style */
         #rules-container {
             position: absolute; top: 15px; left: 15px; z-index: 1000;
         }
@@ -92,7 +92,7 @@
             font-size: 28px; font-weight: bold; cursor: pointer;
         }
         .autocomplete-container {
-            position: relative; display: inline-block; width: 100%; max-width: 300px;
+            position: relative; display: inline-block; width: 100%;
         }
         #suggestions {
             position: absolute; z-index: 99; background-color: #1a1e24; color: #f5f5f5;
@@ -104,7 +104,7 @@
         #suggestions div:hover { background-color: #2c7be5; }
 
         @media (max-width: 768px) {
-            .page-wrapper { padding: 10px 10px 120px 10px; justify-content: flex-start; }
+            .page-wrapper { padding: 60px 10px 120px 10px; justify-content: flex-start; }
             #logo { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 80px; }
             #data-source { position: fixed; bottom: 5px; right: 5px; font-size: 8px; }
             #rules-container { top: 10px; left: 10px; }
@@ -142,7 +142,7 @@
         
         <div id="rulesModal" class="modal">
             <div class="modal-content">
-                <span id="close-button" class="close-button">&times;</span>
+                <span id="close-rules-button" class="close-button">&times;</span>
                 <h2>How to Play FumbLe</h2>
                 <p>1. A player's position and career stats will be displayed. Your goal is to guess the NFL player's name.</p>
                 <p>2. You get 4 guesses. If you are stuck, you can use the "Get Hint" button but it will take away one of your guesses.</p>
@@ -159,58 +159,87 @@
     </div>
 
     <script>
-        // Start the game automatically when the page loads
-        document.addEventListener('DOMContentLoaded', startGame);
+        // --- FIXED: Consolidated all element selections to the top to prevent errors ---
+        const guessInput = document.getElementById("guessInput");
+        const guessButton = document.getElementById("guessButton");
+        const hintButton = document.getElementById("hintButton");
+        const feedbackP = document.getElementById("feedback");
+        const playerPositionP = document.getElementById("playerPosition");
+        const statsTable = document.getElementById("statsTable");
+        const suggestionsDiv = document.getElementById("suggestions");
+        const rulesButton = document.getElementById('rules-button');
+        const rulesModal = document.getElementById('rulesModal');
+        const closeRulesButton = document.getElementById('close-rules-button');
 
         const columnMap = {
-            "Year": "Yr", "FantPos": "Pos", "G": "Games", "PPR": "PPR Pts", "PPR_Rank_by_Pos": "PPR Rank",
+            "Year": "Yr", "G": "Games", "PPR": "PPR Pts", "PPR_Rank_by_Pos": "PPR Rank",
             "PassYds": "Pass Yd", "PassTD": "Pass TD", "Rec": "Rec", "RecYds": "Rec Yd", "RecTD": "Rec TD",
             "RushYds": "Rush Yd", "RushTD": "Rush TD",
         };
+        let debounceTimeout;
 
+        // --- FIXED: Centralized all event listeners ---
+        document.addEventListener('DOMContentLoaded', startGame);
+        guessButton.addEventListener('click', submitGuess);
+        hintButton.addEventListener('click', getHint);
+        rulesButton.addEventListener('click', () => rulesModal.classList.add('active'));
+        closeRulesButton.addEventListener('click', () => rulesModal.classList.remove('active'));
+        rulesModal.addEventListener('click', (event) => {
+            if (event.target === rulesModal) {
+                rulesModal.classList.remove('active');
+            }
+        });
+        guessInput.addEventListener("input", debounce(handleGuessInput, 300));
+        guessInput.addEventListener("keydown", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                submitGuess();
+            }
+        });
+        document.body.addEventListener('click', (event) => {
+            if (!event.target.closest('.autocomplete-container')) {
+                suggestionsDiv.style.display = 'none';
+            }
+        });
+
+        // --- Main Game Functions ---
         async function startGame() {
-            document.getElementById("feedback").textContent = "Loading stats...";
-            document.getElementById("guessInput").disabled = true;
-            document.getElementById("guessButton").disabled = true;
-            document.getElementById("hintButton").disabled = true;
+            feedbackP.textContent = "Loading stats...";
+            guessInput.disabled = true;
+            guessButton.disabled = true;
+            hintButton.disabled = true;
 
             try {
-                // REMOVED: No longer needs to get 'year' from a dropdown
                 const response = await fetch('/start_game', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    // The body can be empty if your backend doesn't require it, 
-                    // or you can send a default if needed.
                     body: JSON.stringify({}) 
                 });
                 const data = await response.json();
 
                 if (data.error) {
-                    document.getElementById("feedback").textContent = data.error;
+                    feedbackP.textContent = data.error;
                     return;
                 }
 
-                document.getElementById("playerPosition").textContent = `Position: ${data.position}`;
+                playerPositionP.textContent = `Position: ${data.position}`;
                 renderTable(data.stats);
-                document.getElementById("feedback").textContent = "Guess the player based on their stats:";
+                feedbackP.textContent = "Guess the player based on their stats:";
                 
-                document.getElementById("guessInput").value = "";
-                document.getElementById("guessInput").disabled = false;
-                document.getElementById("guessButton").disabled = false;
-                document.getElementById("hintButton").disabled = false;
-                document.getElementById("statsTable").style.display = 'table';
+                guessInput.value = "";
+                guessInput.disabled = false;
+                guessButton.disabled = false;
+                hintButton.disabled = false;
+                statsTable.style.display = 'table';
             } catch (error) {
-                document.getElementById("feedback").textContent = "Failed to start the game. Please try again.";
+                feedbackP.textContent = "Failed to start the game. Please try again.";
                 console.error("Start Game Error:", error);
             }
         }
         
-        // All other JavaScript functions (renderTable, submitGuess, etc.) remain the same...
-        // ... but I will include them here for completeness.
-
         function renderTable(stats) {
-            const tableBody = document.querySelector("#statsTable tbody");
-            const tableHead = document.querySelector("#statsTable thead");
+            const tableBody = statsTable.querySelector("tbody");
+            const tableHead = statsTable.querySelector("thead");
             tableBody.innerHTML = '';
             tableHead.innerHTML = '';
             if (!stats || stats.length === 0) return;
@@ -250,7 +279,6 @@
         }
 
         async function submitGuess() {
-            const guessInput = document.getElementById("guessInput");
             const guess = guessInput.value.trim();
             if (!guess) return;
             guessInput.value = '';
@@ -260,11 +288,11 @@
                 body: JSON.stringify({ guess: guess })
             });
             const data = await response.json();
-            document.getElementById("feedback").innerHTML = data.message + (data.hint ? `<br><br>${data.hint}` : '');
+            feedbackP.innerHTML = data.message + (data.hint ? `<br><br>${data.hint}` : '');
             if (data.result === 'correct' || data.result === 'out_of_guesses') {
                 guessInput.disabled = true;
-                document.getElementById("guessButton").disabled = true;
-                document.getElementById("hintButton").disabled = true;
+                guessButton.disabled = true;
+                hintButton.disabled = true;
             }
         }
         
@@ -274,26 +302,8 @@
                 headers: { 'Content-Type': 'application/json' }
             });
             const data = await response.json();
-            document.getElementById("feedback").innerHTML = data.message;
+            feedbackP.innerHTML = data.message;
         }
-
-        // Setup Rules Modal Listeners
-        const rulesButton = document.getElementById('rules-button');
-        const rulesModal = document.getElementById('rulesModal');
-        const closeButton = document.getElementById('close-button');
-
-        rulesButton.addEventListener('click', () => rulesModal.classList.add('active'));
-        closeButton.addEventListener('click', () => rulesModal.classList.remove('active'));
-        rulesModal.addEventListener('click', (event) => {
-            if (event.target === rulesModal) {
-                rulesModal.classList.remove('active');
-            }
-        });
-
-        // Setup Autocomplete Listeners
-        let debounceTimeout;
-        const guessInput = document.getElementById("guessInput");
-        const suggestionsDiv = document.getElementById("suggestions");
 
         function debounce(func, delay) {
             return function(...args) {
@@ -308,7 +318,6 @@
                 suggestionsDiv.style.display = 'none';
                 return;
             }
-            // REMOVED: no longer needs to send year for suggestions
             const response = await fetch('/suggest_players', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -335,19 +344,6 @@
                 suggestionsDiv.style.display = 'none';
             }
         }
-
-        guessInput.addEventListener("input", debounce(handleGuessInput, 300));
-        guessInput.addEventListener("keydown", function(event) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                submitGuess();
-            }
-        });
-        document.body.addEventListener('click', (event) => {
-            if (!event.target.closest('.autocomplete-container')) {
-                suggestionsDiv.style.display = 'none';
-            }
-        });
     </script>
 </body>
 </html>
