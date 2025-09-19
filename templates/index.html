@@ -2,22 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <!-- This is the new line of code that fixes the mobile zoom issue -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FumbLe</title>
     <style>
-        /* ADDED FOR BETTER LAYOUT CONTROL */
         * {
             box-sizing: border-box;
         }
 
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }
+
         body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #10141a 0%, #1a1e24 100%);
+            font-family: Arial, sans-serif;
+            background: #10141a;
             color: #f5f5f5;
         }
 
-        /* NEW: A robust wrapper to control the entire page layout */
+        /* A robust wrapper to control the entire page layout */
         .page-wrapper {
             position: relative;
             width: 100%;
@@ -26,21 +31,8 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
-            text-align: center;
-            position: relative;
-            margin: 0; /* Removed default body margin */
-        }
-
-        /* Top-level containers for better mobile management */
-        .header-container {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
             padding: 20px;
-            box-sizing: border-box;
-            position: absolute;
-            top: 0;
+            overflow-x: hidden; /* Prevents horizontal scroll */
         }
 
         .main-content {
@@ -48,131 +40,96 @@
             flex-direction: column;
             align-items: center;
             width: 100%;
-            max-width: 1200px; /* Optional: constrain max width on large screens */
+            max-width: 1200px;
+            text-align: center;
         }
 
         h1 {
-            margin: 0;
-            margin-bottom: 10px;
+            margin: 0 0 10px 0;
         }
 
         #playerPosition {
-            font-size: 1.25rem;
+            font-size: 20px;
             color: #bbb;
             margin: 10px 0;
-            font-weight: 600;
+            font-weight: bold;
             font-style: italic;
         }
 
-        .game-controls {
+        .input-group {
             display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 20px;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .game-controls {
+             display: flex;
+             flex-direction: column;
+             align-items: center;
         }
 
         .table-container {
             overflow-x: auto; /* Allows only the table to scroll horizontally */
             width: 100%;
-            margin: 0 auto;
+            margin: 15px 0;
         }
 
         #statsTable {
             width: 100%;
             border-collapse: collapse;
             font-size: 14px;
-            min-width: 600px; /* This is fine now because its parent container will scroll */
+            min-width: 600px;
         }
 
         #statsTable th, #statsTable td {
-            border: 1px solid #2a2e34;
-            padding: 12px;
+            border: 1px solid #444;
+            padding: 8px;
             white-space: nowrap;
             text-align: center;
         }
-
         #statsTable th {
             background-color: #2c7be5;
             color: white;
-            padding-top: 12px;
-            padding-bottom: 12px;
-            text-align: left;
+            padding: 12px 8px;
         }
-
         #statsTable tr:nth-child(even) {
             background-color: #1a1e24;
         }
-
         #statsTable tr:hover {
             background-color: #1f232b;
         }
-
         .highlight-green {
-            background-color: #4CAF50 !important;
-            color: black !important;
-            font-weight: 600;
+            background-color: #4CAF50;
+            color: black;
         }
-
         .highlight-yellow {
-            background-color: #FFC107 !important;
-            color: black !important;
-            font-weight: 600;
+            background-color: #FFC107;
+            color: black;
         }
-
         .highlight-red {
-            background-color: #F44336 !important;
-            color: black !important;
-            font-weight: 600;
+            background-color: #F44336;
+            color: black;
         }
-
         input, button, select {
-            padding: 12px 20px;
-            font-size: 1rem;
+            padding: 10px;
+            font-size: 16px;
             margin: 5px;
-            border-radius: 8px;
+            border-radius: 5px;
             border: none;
-            transition: all 0.3s ease;
         }
-
         button {
             background-color: #2c7be5;
             color: white;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(44, 123, 229, 0.2);
-            font-weight: 600;
         }
-
         button:hover {
             background-color: #1a5bb8;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(44, 123, 229, 0.4);
         }
-
-        button:disabled {
-            background-color: #666;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        input[type="text"] {
-            background-color: #2a2e34;
-            color: #f5f5f5;
-            border: 1px solid #444;
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        input[type="text"]:focus {
-            outline: none;
-            border-color: #2c7be5;
-            box-shadow: 0 0 8px rgba(44, 123, 229, 0.5);
-        }
-
         #feedback {
             margin-top: 15px;
             font-size: 18px;
+            min-height: 25px; /* prevent layout shifts */
         }
 
         #rules-container {
@@ -183,17 +140,18 @@
         }
 
         #logo {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
             width: 100px;
-            height: auto;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 1000;
         }
-
+        
         #data-source {
             position: absolute;
             bottom: 10px;
             right: 10px;
-            font-size: 0.7rem;
+            font-size: 10px;
             color: #888;
         }
         #data-source a {
@@ -224,13 +182,11 @@
             background-color: #1a1e24;
             padding: 20px;
             border: 1px solid #888;
-            width: 90%; /* Changed from max-width for better mobile fit */
+            width: 90%;
             max-width: 500px;
             border-radius: 10px;
             position: relative;
             color: white;
-            text-align: left;
-            box-shadow: 0 10px 30px rgba(44, 123, 229, 0.2);
         }
         .close-button {
             color: #aaa;
@@ -244,9 +200,9 @@
 
         .autocomplete-container {
             position: relative;
+            display: inline-block;
             width: 100%;
             max-width: 300px;
-            margin: 0 auto;
         }
         #suggestions {
             position: absolute;
@@ -271,28 +227,14 @@
             background-color: #2c7be5;
         }
 
-        /* Media Queries for fine-tuning on smaller screens */
-        @media (max-width: 600px) {
-            body {
-                justify-content: flex-start;
-                padding-top: 20px; /* Add space at the top */
-                padding-bottom: 100px; /* Add space for bottom elements */
-            }
-            .main-content {
-                padding-top: 70px; /* Push content below the header */
-            }
-            .header-container {
-                position: relative;
-                flex-direction: column;
-                align-items: center;
-                text-align: center;
+        /* Simplified and more effective media query */
+        @media (max-width: 768px) {
+            .page-wrapper {
                 padding: 10px;
+                padding-bottom: 120px; /* Space for fixed bottom elements */
+                justify-content: flex-start;
             }
-            #rules-container {
-                position: absolute; /* Re-position within the viewport */
-                top: 10px;
-                left: 10px;
-            }
+
             #logo {
                 position: fixed; /* Keep it in view */
                 bottom: 20px;
@@ -314,30 +256,31 @@
     </style>
 </head>
 <body>
-    <div id="rules-container">
-        <button onclick="toggleRules()">Rules</button>
-    </div>
-
-    <div class="main-content">
-        <h1>FumbLe</h1>
-        
-        <div class="input-group">
-            <label for="yearInput">Earliest Year:</label>
-            <select id="yearInput"></select>
-            <button onclick="startGame()">Start Game</button>
+    <div class="page-wrapper">
+        <div id="rules-container">
+            <button onclick="toggleRules()">Rules</button>
         </div>
 
-        <div>
-            <div class="autocomplete-container">
-                <input type="text" id="guessInput" placeholder="Enter player name" disabled>
-                <div id="suggestions"></div>
+        <div class="main-content">
+            <h1>FumbLe</h1>
+            
+            <div class="input-group">
+                <label for="yearInput">Earliest Year:</label>
+                <select id="yearInput"></select>
+                <button onclick="startGame()">Start Game</button>
             </div>
-            <button onclick="submitGuess()" id="guessButton" disabled>Guess</button>
-            <button onclick="getHint()" id="hintButton" disabled>Get Hint</button>
-        </div>
 
-        <p id="feedback"></p>
-        <p id="playerPosition"></p>
+            <div class="game-controls">
+                <div class="autocomplete-container">
+                    <input type="text" id="guessInput" placeholder="Enter player name" disabled>
+                    <div id="suggestions"></div>
+                </div>
+                <button onclick="submitGuess()" id="guessButton" disabled>Guess</button>
+                <button onclick="getHint()" id="hintButton" disabled>Get Hint</button>
+            </div>
+
+            <p id="feedback"></p>
+            <p id="playerPosition"></p>
 
             <div class="table-container">
                 <table id="statsTable">
@@ -358,18 +301,23 @@
             </div>
         </div>
 
-    <img id="logo" src="/static/ReillyLabs_Logo.png" alt="ReillyLabs Logo">
+        <img id="logo" src="/static/ReillyLabs_Logo.png" alt="ReillyLabs Logo">
 
-    <p id="data-source">
-        Player Data from <a href="https://www.pro-football-reference.com/" target="_blank">Pro Football Reference</a>
-    </p>
+        <p id="data-source">
+            Player Data from <a href="https://www.pro-football-reference.com/" target="_blank">Pro Football Reference</a>
+        </p>
+    </div>
 
     <script>
         const yearSelect = document.getElementById("yearInput");
-        for (let i = 2010; i <= 2024; i++) {
+        const currentYear = new Date().getFullYear();
+        for (let i = 2010; i <= currentYear; i++) {
             const option = document.createElement("option");
             option.value = i;
             option.textContent = i;
+            if (i === currentYear) {
+                option.selected = true;
+            }
             yearSelect.appendChild(option);
         }
 
@@ -379,52 +327,10 @@
             "RushYds": "Rush Yds", "RushTD": "Rush TDs",
         };
 
-            const startScreen = document.getElementById('start-screen');
-            const gameInterface = document.getElementById('game-interface');
-            const startGameButton = document.getElementById('start-game-button');
-            const rulesButton = document.getElementById('rules-button');
-            const rulesModal = document.getElementById('rulesModal');
-            const closeButton = document.querySelector('.close-button');
-            const playerPositionDiv = document.getElementById('playerPosition');
-            const statsTable = document.getElementById('statsTable');
-            const statsTableHead = statsTable.querySelector('thead');
-            const statsTableBody = statsTable.querySelector('tbody');
-            const guessInput = document.getElementById('guessInput');
-            const suggestionsDiv = document.getElementById('suggestions');
-            const guessButton = document.getElementById('guessButton');
-            const hintButton = document.getElementById('hintButton');
-            const feedback = document.getElementById('feedback');
-
-            let debounceTimeout;
-
-            // Event Listeners
-            startGameButton.addEventListener('click', startGame);
-            guessButton.addEventListener('click', submitGuess);
-            hintButton.addEventListener('click', getHint);
-            rulesButton.addEventListener('click', () => rulesModal.style.display = 'flex');
-            closeButton.addEventListener('click', () => rulesModal.style.display = 'none');
-            window.addEventListener('click', (event) => {
-                if (event.target === rulesModal) {
-                    rulesModal.style.display = 'none';
-                }
-            });
-            guessInput.addEventListener('input', debounce(handleGuessInput, 300));
-            guessInput.addEventListener('keydown', (event) => {
-                if (event.key === "Enter") {
-                    event.preventDefault();
-                    submitGuess();
-                }
-            });
-
-            // Functions
-            function debounce(func, delay) {
-                return function(...args) {
-                    clearTimeout(debounceTimeout);
-                    debounceTimeout = setTimeout(() => func.apply(this, args), delay);
-                };
-            }
+        let mysteryPlayerPos = null;
 
         async function startGame() {
+            const year = yearSelect.value;
             document.getElementById("feedback").textContent = "Loading stats...";
             document.getElementById("guessInput").disabled = true;
             document.getElementById("guessButton").disabled = true;
@@ -436,77 +342,85 @@
             document.querySelector("#statsTable thead").innerHTML = '';
 
 
-            const response = await fetch('/start_game', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ earliestYear: year })
-            });
-            const data = await response.json();
+            try {
+                const response = await fetch('/start_game', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ earliestYear: year })
+                });
+                const data = await response.json();
 
-            if (data.error) {
-                document.getElementById("feedback").textContent = data.error;
-                return;
+                if (data.error) {
+                    document.getElementById("feedback").textContent = data.error;
+                    return;
+                }
+
+                mysteryPlayerPos = data.position;
+                document.getElementById("playerPosition").textContent = `Position: ${mysteryPlayerPos}`;
+                renderTable(data.stats);
+                document.getElementById("feedback").textContent = "Guess the player based on their stats:";
+                
+                document.getElementById("guessInput").value = "";
+                document.getElementById("guessInput").disabled = false;
+                document.getElementById("guessButton").disabled = false;
+                document.getElementById("hintButton").disabled = false;
+                document.getElementById("statsTable").style.display = 'table';
+            } catch (error) {
+                document.getElementById("feedback").textContent = "Failed to start the game. Please try again.";
+                console.error("Start Game Error:", error);
             }
-
-            mysteryPlayerPos = data.position;
-            document.getElementById("playerPosition").textContent = `Position: ${mysteryPlayerPos}`;
-            renderTable(data.stats);
-            document.getElementById("feedback").textContent = "Guess the player based on their stats:";
-            
-            document.getElementById("guessInput").value = "";
-            document.getElementById("guessInput").disabled = false;
-            document.getElementById("guessButton").disabled = false;
-            document.getElementById("hintButton").disabled = false;
-            document.getElementById("statsTable").style.display = 'table';
         }
 
-            function renderTable(stats) {
-                statsTableBody.innerHTML = '';
-                statsTableHead.innerHTML = '';
+        function renderTable(stats) {
+            const tableBody = document.querySelector("#statsTable tbody");
+            const tableHead = document.querySelector("#statsTable thead");
+            tableBody.innerHTML = '';
+            tableHead.innerHTML = '';
 
-            if (stats.length === 0) return;
+            if (!stats || stats.length === 0) return;
 
-                let desiredOrder = ["Year", "FantPos", "G", "PPR", "PPR_Rank_by_Pos"];
-                
-                if (stats[0].FantPos === "QB") {
-                    desiredOrder.push("PassYds", "PassTD", "RushYds", "RushTD");
-                } else {
-                    desiredOrder.push("Rec", "RecYds", "RecTD", "RushYds", "RushTD");
-                }
+            let desiredOrder = ["Year", "FantPos", "G", "PPR", "PPR_Rank_by_Pos"];
+            
+            if (stats[0].FantPos === "QB") {
+                desiredOrder.push("PassYds", "PassTD", "RushYds", "RushTD");
+            } else {
+                desiredOrder.push("RushYds", "RushTD", "Rec", "RecYds", "RecTD");
+            }
 
             const headerRow = document.createElement("tr");
             desiredOrder.forEach(headerText => {
-                const th = document.createElement("th");
-                th.textContent = columnMap[headerText] || headerText;
-                headerRow.appendChild(th);
+                if (Object.keys(stats[0]).includes(headerText)) {
+                    const th = document.createElement("th");
+                    th.textContent = columnMap[headerText] || headerText;
+                    headerRow.appendChild(th);
+                }
             });
             tableHead.appendChild(headerRow);
 
             stats.forEach(statRow => {
                 const row = document.createElement("tr");
                 desiredOrder.forEach(headerText => {
-                    const td = document.createElement("td");
-                    td.textContent = statRow[headerText];
-
-                    if (headerText === 'PPR_Rank_by_Pos') {
-                        const rank = parseInt(statRow[headerText]);
-                        if (rank <= 12) {
-                            td.classList.add('highlight-green');
-                        } else if (rank > 12 && rank <= 24) {
-                            td.classList.add('highlight-yellow');
-                        } else {
-                            td.classList.add('highlight-red');
+                    if (Object.keys(stats[0]).includes(headerText)) {
+                        const td = document.createElement("td");
+                        const value = statRow[headerText] !== null && statRow[headerText] !== undefined ? statRow[headerText] : 'N/A';
+                        td.textContent = value;
+    
+                        if (headerText === 'PPR_Rank_by_Pos' && !isNaN(value)) {
+                            const rank = parseInt(value, 10);
+                            if (rank <= 12) td.classList.add('highlight-green');
+                            else if (rank <= 24) td.classList.add('highlight-yellow');
+                            else td.classList.add('highlight-red');
                         }
+                        row.appendChild(td);
                     }
-                    row.appendChild(td);
                 });
                 tableBody.appendChild(row);
             });
         }
 
-            async function submitGuess() {
-                const guess = guessInput.value.trim();
-                if (!guess) return;
+        async function submitGuess() {
+            const guess = document.getElementById("guessInput").value.trim();
+            if (!guess) return;
 
             const response = await fetch('/guess', {
                 method: 'POST',
@@ -552,6 +466,7 @@
 
         async function handleGuessInput() {
             const query = guessInput.value.trim();
+            const year = yearSelect.value;
             
             if (query.length < 2) {
                 suggestionsDiv.style.display = 'none';
@@ -561,7 +476,7 @@
             const response = await fetch('/suggest_players', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query: query })
+                body: JSON.stringify({ query: query, earliestYear: year })
             });
             const players = await response.json();
             
@@ -570,13 +485,12 @@
 
         function renderSuggestions(players) {
             suggestionsDiv.innerHTML = '';
-            if (players.length > 0) {
+            if (players && players.length > 0) {
                 players.forEach(player => {
                     const suggestion = document.createElement('div');
                     suggestion.textContent = player;
                     suggestion.addEventListener('click', () => {
                         guessInput.value = player;
-                        suggestionsDiv.innerHTML = '';
                         suggestionsDiv.style.display = 'none';
                     });
                     suggestionsDiv.appendChild(suggestion);
@@ -590,8 +504,7 @@
         guessInput.addEventListener("input", debounce(handleGuessInput, 300));
 
         document.body.addEventListener('click', (event) => {
-            if (!suggestionsDiv.contains(event.target) && event.target !== guessInput) {
-                suggestionsDiv.innerHTML = '';
+            if (!event.target.closest('.autocomplete-container')) {
                 suggestionsDiv.style.display = 'none';
             }
         });
