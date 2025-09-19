@@ -5,17 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FumbLe</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body {
-            font-family: Arial, sans-serif;
-            background: #10141a;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #10141a 0%, #1a1e24 100%);
             color: #f5f5f5;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             min-height: 100vh;
             text-align: center;
-            position: relative;
+            padding: 20px;
+            box-sizing: border-box;
         }
 
         .header-container {
@@ -26,6 +28,7 @@
             box-sizing: border-box;
             position: absolute;
             top: 0;
+            left: 0;
         }
 
         .main-content {
@@ -34,90 +37,140 @@
             align-items: center;
             padding: 20px;
             width: 100%;
+            max-width: 900px;
+            margin-top: 80px;
         }
 
         h1 {
+            font-size: 3rem;
+            font-weight: 700;
             margin: 0;
-            margin-bottom: 10px;
+            margin-bottom: 20px;
+            color: #2c7be5;
+            text-shadow: 0 4px 10px rgba(44, 123, 229, 0.3);
         }
 
         #playerPosition {
-            font-size: 20px;
+            font-size: 1.25rem;
             color: #bbb;
             margin: 10px 0;
-            font-weight: bold;
+            font-weight: 600;
             font-style: italic;
         }
 
-        .input-group {
+        .game-controls {
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
         }
 
         .table-container {
             overflow-x: auto;
             width: 100%;
-            margin: 0 auto;
+            margin: 20px 0;
+            border-radius: 12px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
         }
 
         #statsTable {
             width: 100%;
-            margin: 0 auto;
             border-collapse: collapse;
             font-size: 14px;
-            min-width: 600px;
+            min-width: 650px;
         }
 
         #statsTable th, #statsTable td {
-            border: 1px solid #444;
-            padding: 8px;
+            border: 1px solid #2a2e34;
+            padding: 12px;
             white-space: nowrap;
+            text-align: center;
         }
+
         #statsTable th {
             background-color: #2c7be5;
             color: white;
-            padding-top: 12px;
-            padding-bottom: 12px;
-            text-align: left;
+            font-weight: 700;
+            text-transform: uppercase;
         }
+
         #statsTable tr:nth-child(even) {
             background-color: #1a1e24;
         }
+
         #statsTable tr:hover {
             background-color: #1f232b;
         }
+
         .highlight-green {
-            background-color: #4CAF50;
-            color: black;
+            background-color: #4CAF50 !important;
+            color: black !important;
+            font-weight: 600;
         }
+
         .highlight-yellow {
-            background-color: #FFC107;
-            color: black;
+            background-color: #FFC107 !important;
+            color: black !important;
+            font-weight: 600;
         }
+
         .highlight-red {
-            background-color: #F44336;
-            color: black;
+            background-color: #F44336 !important;
+            color: black !important;
+            font-weight: 600;
         }
+
         input, button, select {
-            padding: 10px;
-            font-size: 16px;
+            padding: 12px 20px;
+            font-size: 1rem;
             margin: 5px;
-            border-radius: 5px;
+            border-radius: 8px;
             border: none;
+            transition: all 0.3s ease;
         }
+
         button {
             background-color: #2c7be5;
             color: white;
             cursor: pointer;
+            box-shadow: 0 4px 15px rgba(44, 123, 229, 0.2);
+            font-weight: 600;
         }
+
         button:hover {
             background-color: #1a5bb8;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(44, 123, 229, 0.4);
         }
+
+        button:disabled {
+            background-color: #666;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        input[type="text"] {
+            background-color: #2a2e34;
+            color: #f5f5f5;
+            border: 1px solid #444;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #2c7be5;
+            box-shadow: 0 0 8px rgba(44, 123, 229, 0.5);
+        }
+
         #feedback {
             margin-top: 15px;
-            font-size: 18px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            min-height: 40px;
+            color: #f5f5f5;
         }
 
         #rules-container {
@@ -128,18 +181,17 @@
         }
 
         #logo {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
             width: 100px;
-            z-index: 1000;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
-        
+
         #data-source {
             position: absolute;
             bottom: 10px;
             right: 10px;
-            font-size: 10px;
+            font-size: 0.7rem;
             color: #888;
         }
         #data-source a {
@@ -165,16 +217,20 @@
         }
         .modal-content {
             background-color: #1a1e24;
-            padding: 20px;
-            border: 1px solid #888;
+            padding: 25px;
+            border: 1px solid #2c7be5;
             max-width: 90%;
-            border-radius: 10px;
+            border-radius: 12px;
             position: relative;
             color: white;
+            text-align: left;
+            box-shadow: 0 10px 30px rgba(44, 123, 229, 0.2);
         }
         .close-button {
             color: #aaa;
-            float: right;
+            position: absolute;
+            top: 10px;
+            right: 15px;
             font-size: 28px;
             font-weight: bold;
             cursor: pointer;
@@ -187,9 +243,9 @@
 
         .autocomplete-container {
             position: relative;
-            display: inline-block;
             width: 100%;
             max-width: 300px;
+            margin: 0 auto;
         }
         #suggestions {
             position: absolute;
@@ -203,6 +259,7 @@
             overflow-y: auto;
             text-align: left;
             box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            border-radius: 0 0 8px 8px;
             display: none;
         }
         #suggestions div {
@@ -213,23 +270,34 @@
             background-color: #2c7be5;
         }
 
-        @media (max-width: 600px) {
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            .main-content {
+                margin-top: 50px;
+            }
+            #statsTable th, #statsTable td {
+                padding: 8px;
+                font-size: 12px;
+            }
+            .game-controls {
+                flex-direction: column;
+                width: 100%;
+            }
+            input, button {
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .autocomplete-container {
+                max-width: 100%;
+            }
             body {
                 justify-content: flex-start;
-                min-height: auto;
-                padding-bottom: 150px;
-            }
-            .header-container {
-                position: relative;
-                flex-direction: column;
-                align-items: center;
-                text-align: center;
-                padding: 10px;
+                padding-bottom: 120px;
             }
             #rules-container {
-                position: relative;
-                top: auto;
-                left: auto;
+                position: static;
                 margin-bottom: 10px;
             }
             #logo {
@@ -250,244 +318,269 @@
 </head>
 <body>
     <div id="rules-container">
-        <button onclick="toggleRules()">Rules</button>
+        <button id="rules-button">Rules</button>
     </div>
 
-    <h1>FumbLe</h1>
-    
-    <div class="input-group">
-        <button onclick="startGame()">Start Game</button>
-    </div>
+    <div class="main-content">
+        <h1>FumbLe</h1>
+        <p id="playerPosition"></p>
 
-    <div>
-        <div class="autocomplete-container">
-            <input type="text" id="guessInput" placeholder="Enter player name" disabled>
-            <div id="suggestions"></div>
+        <div id="start-screen">
+            <p>Guess the NFL player based on their career stats.</p>
+            <button id="start-game-button">Start Game</button>
         </div>
-        <button onclick="submitGuess()" id="guessButton" disabled>Guess</button>
-        <button onclick="getHint()" id="hintButton" disabled>Get Hint</button>
-    </div>
 
-    <p id="feedback"></p>
-    <p id="playerPosition"></p>
-
-    <div class="table-container">
-        <table id="statsTable">
-            <thead></thead>
-            <tbody></tbody>
-        </table>
+        <div id="game-interface" style="display:none;">
+            <div class="game-controls">
+                <div class="autocomplete-container">
+                    <input type="text" id="guessInput" placeholder="Enter player name" disabled>
+                    <div id="suggestions"></div>
+                </div>
+                <button id="guessButton" disabled>Guess</button>
+                <button id="hintButton" disabled>Get Hint</button>
+            </div>
+            <p id="feedback"></p>
+            <div class="table-container">
+                <table id="statsTable">
+                    <thead></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
     </div>
     
     <div id="rulesModal" class="modal">
         <div class="modal-content">
-            <span class="close-button" onclick="toggleRules()">&times;</span>
+            <span class="close-button">&times;</span>
             <h2>How to Play FumbLe</h2>
             <p>1. A player's position and career stats will be displayed. Your goal is to guess the NFL player's name.</p>
-            <p>2. You get 4 guesses. If you are stuck, you can use the "Get Hint" button but it will take away one of your guesses.</p>
+            <p>2. You have 4 guesses. Using the "Get Hint" button will take away one of your guesses.</p>
             <p>3. You can guess a player by their full name or last name only. Entries are not case sensitive.</p>
             <p>4. Guess correctly or run out of guesses to end the game.</p>
         </div>
     </div>
-
-    <img id="logo" src="/static/ReillyLabs_Logo.png" alt="ReillyLabs Logo">
-
+    
     <p id="data-source">
         Player Data from <a href="https://www.pro-football-reference.com/" target="_blank">Pro Football Reference</a>
     </p>
 
     <script>
-        const columnMap = {
-            "Year": "Year",
-            "FantPos": "Pos",
-            "G": "Games",
-            "PPR": "PPR Pts",
-            "PPR_Rank_by_Pos": "PPR Rank",
-            "PassYds": "Pass Yds",
-            "PassTD": "Pass TDs",
-            "Rec": "Rec",
-            "RecYds": "Rec Yds",
-            "RecTD": "Rec TDs",
-            "RushYds": "Rush Yds",
-            "RushTD": "Rush TDs",
-        };
-
-        let mysteryPlayerPos = null;
-
-        async function startGame() {
-            document.getElementById("feedback").textContent = "Loading stats...";
-            document.getElementById("guessInput").disabled = true;
-            document.getElementById("guessButton").disabled = true;
-            document.getElementById("hintButton").disabled = true;
-            document.getElementById("statsTable").style.display = 'none';
-            document.getElementById("suggestions").innerHTML = '';
-            document.getElementById("suggestions").style.display = 'none';
-
-            const response = await fetch('/start_game', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
-            });
-            const data = await response.json();
-
-            if (data.error) {
-                document.getElementById("feedback").textContent = data.error;
-                return;
-            }
-
-            mysteryPlayerPos = data.position;
-            document.getElementById("playerPosition").textContent = `Position: ${mysteryPlayerPos}`;
-            renderTable(data.stats);
-            document.getElementById("feedback").textContent = "Guess the player based on their stats:";
-            
-            document.getElementById("guessInput").value = "";
-            document.getElementById("guessInput").disabled = false;
-            document.getElementById("guessButton").disabled = false;
-            document.getElementById("hintButton").disabled = false;
-            document.getElementById("statsTable").style.display = 'table';
-        }
-
-        function renderTable(stats) {
-            const tableBody = document.querySelector("#statsTable tbody");
-            const tableHead = document.querySelector("#statsTable thead");
-            tableBody.innerHTML = '';
-            tableHead.innerHTML = '';
-
-            if (stats.length === 0) return;
-
-            let desiredOrder = ["Year", "FantPos", "G", "PPR", "PPR_Rank_by_Pos"];
-            
-            if (stats[0].FantPos === "QB") {
-                desiredOrder.push("PassYds", "PassTD", "RushYds", "RushTD");
-            } else {
-                desiredOrder.push("RushYds", "RushTD", "Rec", "RecYds", "RecTD");
-            }
-
-            const headerRow = document.createElement("tr");
-            desiredOrder.forEach(headerText => {
-                const th = document.createElement("th");
-                th.textContent = columnMap[headerText] || headerText;
-                headerRow.appendChild(th);
-            });
-            tableHead.appendChild(headerRow);
-
-            stats.forEach(statRow => {
-                const row = document.createElement("tr");
-                desiredOrder.forEach(headerText => {
-                    const td = document.createElement("td");
-                    td.textContent = statRow[headerText];
-
-                    if (headerText === 'PPR_Rank_by_Pos') {
-                        const rank = parseInt(statRow[headerText]);
-                        if (rank <= 12) {
-                            td.classList.add('highlight-green');
-                        } else if (rank > 12 && rank <= 24) {
-                            td.classList.add('highlight-yellow');
-                        } else {
-                            td.classList.add('highlight-red');
-                        }
-                    }
-                    row.appendChild(td);
-                });
-                tableBody.appendChild(row);
-            });
-        }
-
-        async function submitGuess() {
-            const guess = document.getElementById("guessInput").value.trim();
-            if (!guess) return;
-
-            const response = await fetch('/guess', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ guess: guess })
-            });
-            const data = await response.json();
-            
-            document.getElementById("feedback").innerHTML = data.message + (data.hint ? `<br><br>${data.hint}` : '');
-            
-            if (data.result === 'correct' || data.result === 'out_of_guesses') {
-                document.getElementById("guessInput").disabled = true;
-                document.getElementById("guessButton").disabled = true;
-                document.getElementById("hintButton").disabled = true;
-            }
-        }
-        
-        async function getHint() {
-            const response = await fetch('/hint', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
-            });
-            const data = await response.json();
-            
-            document.getElementById("feedback").innerHTML = data.message;
-        }
-        
-        function toggleRules() {
-            const modal = document.getElementById("rulesModal");
-            modal.style.display = modal.style.display === "block" ? "none" : "block";
-        }
-        
-        let debounceTimeout;
-        const guessInput = document.getElementById("guessInput");
-        const suggestionsDiv = document.getElementById("suggestions");
-
-        function debounce(func, delay) {
-            return function(...args) {
-                clearTimeout(debounceTimeout);
-                debounceTimeout = setTimeout(() => func.apply(this, args), delay);
+        document.addEventListener('DOMContentLoaded', () => {
+            const columnMap = {
+                "Year": "Year",
+                "FantPos": "Pos",
+                "G": "Games",
+                "PPR": "PPR Pts",
+                "PPR_Rank_by_Pos": "PPR Rank",
+                "PassYds": "Pass Yds",
+                "PassTD": "Pass TDs",
+                "Rec": "Rec",
+                "RecYds": "Rec Yds",
+                "RecTD": "Rec TDs",
+                "RushYds": "Rush Yds",
+                "RushTD": "Rush TDs",
             };
-        }
 
-        async function handleGuessInput() {
-            const query = guessInput.value.trim();
-            
-            if (query.length < 2) {
-                suggestionsDiv.innerHTML = '';
-                suggestionsDiv.style.display = 'none';
-                return;
-            }
+            const startScreen = document.getElementById('start-screen');
+            const gameInterface = document.getElementById('game-interface');
+            const startGameButton = document.getElementById('start-game-button');
+            const rulesButton = document.getElementById('rules-button');
+            const rulesModal = document.getElementById('rulesModal');
+            const closeButton = document.querySelector('.close-button');
+            const playerPositionDiv = document.getElementById('playerPosition');
+            const statsTable = document.getElementById('statsTable');
+            const statsTableHead = statsTable.querySelector('thead');
+            const statsTableBody = statsTable.querySelector('tbody');
+            const guessInput = document.getElementById('guessInput');
+            const suggestionsDiv = document.getElementById('suggestions');
+            const guessButton = document.getElementById('guessButton');
+            const hintButton = document.getElementById('hintButton');
+            const feedback = document.getElementById('feedback');
 
-            const response = await fetch('/suggest_players', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query: query })
+            let debounceTimeout;
+
+            // Event Listeners
+            startGameButton.addEventListener('click', startGame);
+            guessButton.addEventListener('click', submitGuess);
+            hintButton.addEventListener('click', getHint);
+            rulesButton.addEventListener('click', () => rulesModal.style.display = 'flex');
+            closeButton.addEventListener('click', () => rulesModal.style.display = 'none');
+            window.addEventListener('click', (event) => {
+                if (event.target === rulesModal) {
+                    rulesModal.style.display = 'none';
+                }
             });
-            const players = await response.json();
-            
-            renderSuggestions(players);
-        }
+            guessInput.addEventListener('input', debounce(handleGuessInput, 300));
+            guessInput.addEventListener('keydown', (event) => {
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    submitGuess();
+                }
+            });
 
-        function renderSuggestions(players) {
-            suggestionsDiv.innerHTML = '';
-            if (players.length > 0) {
-                players.forEach(player => {
-                    const suggestion = document.createElement('div');
-                    suggestion.textContent = player;
-                    suggestion.addEventListener('click', () => {
-                        guessInput.value = player;
-                        suggestionsDiv.innerHTML = '';
-                        suggestionsDiv.style.display = 'none';
-                    });
-                    suggestionsDiv.appendChild(suggestion);
-                });
-                suggestionsDiv.style.display = 'block';
-            } else {
-                suggestionsDiv.style.display = 'none';
+            // Functions
+            function debounce(func, delay) {
+                return function(...args) {
+                    clearTimeout(debounceTimeout);
+                    debounceTimeout = setTimeout(() => func.apply(this, args), delay);
+                };
             }
-        }
 
-        guessInput.addEventListener("input", debounce(handleGuessInput, 300));
-
-        document.body.addEventListener('click', (event) => {
-            if (!suggestionsDiv.contains(event.target) && event.target !== guessInput) {
+            async function startGame() {
+                feedback.textContent = "Loading stats...";
+                toggleControls(true);
+                statsTable.style.display = 'none';
                 suggestionsDiv.innerHTML = '';
                 suggestionsDiv.style.display = 'none';
+                
+                const response = await fetch('/start_game', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+
+                if (data.error) {
+                    feedback.textContent = data.error;
+                    toggleControls(false);
+                    return;
+                }
+                
+                startScreen.style.display = 'none';
+                gameInterface.style.display = 'block';
+
+                playerPositionDiv.textContent = `Position: ${data.position}`;
+                renderTable(data.stats);
+                feedback.textContent = "Guess the player based on their stats:";
+                
+                guessInput.value = "";
+                toggleControls(false);
+                statsTable.style.display = 'table';
             }
-        });
-        
-        guessInput.addEventListener("keydown", function(event) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                submitGuess();
+
+            function renderTable(stats) {
+                statsTableBody.innerHTML = '';
+                statsTableHead.innerHTML = '';
+
+                if (stats.length === 0) return;
+
+                let desiredOrder = ["Year", "FantPos", "G", "PPR", "PPR_Rank_by_Pos"];
+                
+                if (stats[0].FantPos === "QB") {
+                    desiredOrder.push("PassYds", "PassTD", "RushYds", "RushTD");
+                } else {
+                    desiredOrder.push("Rec", "RecYds", "RecTD", "RushYds", "RushTD");
+                }
+
+                const headerRow = document.createElement("tr");
+                desiredOrder.forEach(headerText => {
+                    const th = document.createElement("th");
+                    th.textContent = columnMap[headerText] || headerText;
+                    headerRow.appendChild(th);
+                });
+                statsTableHead.appendChild(headerRow);
+
+                stats.forEach(statRow => {
+                    const row = document.createElement("tr");
+                    desiredOrder.forEach(headerText => {
+                        const td = document.createElement("td");
+                        td.textContent = statRow[headerText];
+
+                        if (headerText === 'PPR_Rank_by_Pos') {
+                            const rank = parseInt(statRow[headerText]);
+                            if (rank <= 12) {
+                                td.classList.add('highlight-green');
+                            } else if (rank > 12 && rank <= 24) {
+                                td.classList.add('highlight-yellow');
+                            } else {
+                                td.classList.add('highlight-red');
+                            }
+                        }
+                        row.appendChild(td);
+                    });
+                    statsTableBody.appendChild(row);
+                });
+            }
+
+            async function submitGuess() {
+                const guess = guessInput.value.trim();
+                if (!guess) return;
+
+                const response = await fetch('/guess', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ guess: guess })
+                });
+                const data = await response.json();
+                
+                guessInput.value = '';
+                feedback.innerHTML = data.message + (data.hint ? `<br><br>${data.hint}` : '');
+                
+                if (data.result === 'correct' || data.result === 'out_of_guesses') {
+                    toggleControls(true);
+                    setTimeout(() => {
+                        startScreen.style.display = 'flex';
+                        gameInterface.style.display = 'none';
+                        feedback.textContent = '';
+                        playerPositionDiv.textContent = '';
+                        statsTableHead.innerHTML = '';
+                        statsTableBody.innerHTML = '';
+                        toggleControls(false);
+                    }, 3000);
+                }
+            }
+            
+            async function getHint() {
+                const response = await fetch('/hint', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+                
+                feedback.innerHTML = data.message;
+            }
+            
+            async function handleGuessInput() {
+                const query = guessInput.value.trim();
+                
+                if (query.length < 2) {
+                    suggestionsDiv.innerHTML = '';
+                    suggestionsDiv.style.display = 'none';
+                    return;
+                }
+
+                const response = await fetch('/suggest_players', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: query })
+                });
+                const players = await response.json();
+                
+                renderSuggestions(players);
+            }
+
+            function renderSuggestions(players) {
+                suggestionsDiv.innerHTML = '';
+                if (players.length > 0) {
+                    players.forEach(player => {
+                        const suggestion = document.createElement('div');
+                        suggestion.textContent = player;
+                        suggestion.addEventListener('click', () => {
+                            guessInput.value = player;
+                            suggestionsDiv.innerHTML = '';
+                            suggestionsDiv.style.display = 'none';
+                        });
+                        suggestionsDiv.appendChild(suggestion);
+                    });
+                    suggestionsDiv.style.display = 'block';
+                } else {
+                    suggestionsDiv.style.display = 'none';
+                }
+            }
+
+            function toggleControls(disable) {
+                guessInput.disabled = disable;
+                guessButton.disabled = disable;
+                hintButton.disabled = disable;
             }
         });
     </script>
