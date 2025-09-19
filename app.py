@@ -50,10 +50,7 @@ else:
         file_name = f'player_stats{year}.csv'
         file_path = os.path.join(base_dir, file_name)
 
-        if not os.path.exists(file_path):
-            continue
-        
-        if not os.access(file_path, os.R_OK):
+        if not os.path.exists(file_path) or not os.access(file_path, os.R_OK):
             continue
 
         try:
@@ -109,6 +106,9 @@ def get_most_frequent_with_tiebreaker(df, column):
         return "N/A"
     
     counts = df[column].value_counts()
+    if counts.empty:
+        return "N/A"
+        
     max_seasons = counts.max()
     tied_values = counts[counts == max_seasons].index.tolist()
 
@@ -126,7 +126,7 @@ def get_most_frequent_with_tiebreaker(df, column):
 
 # --- Pre-filter all eligible players at app startup ---
 if 'Player' not in combined_df.columns:
-    print("Fatal Error: 'Player' column is missing from the combined dataset. Cannot proceed with game logic.")
+    print("Fatal Error: 'Player' column is missing from the combined dataset. Cannot proceed.")
     exit()
 
 player_first_year = combined_df.groupby('Player')['Year'].min().reset_index()
@@ -139,7 +139,6 @@ top_12_seasons = eligible_players_df[eligible_players_df['PPR_Rank_by_Pos'] <= 1
 valid_players_12 = top_12_seasons['Player'].unique().tolist()
 eligible_players_list = list(set(valid_players_24 + valid_players_12))
 
-# Perform a single pre-filter on all eligible players
 eligible_players_prefiltered = eligible_players_df[
     (eligible_players_df['Player'].isin(eligible_players_list)) &
     (eligible_players_df['FirstYear'] >= EARLIEST_YEAR) &
@@ -152,21 +151,24 @@ if eligible_players_prefiltered.empty:
 print("All eligible players pre-filtered and stored!")
 
 # --- Flask Routes ---
+# MODIFIED: This route now serves the landing page.
 @app.route('/')
 def home():
-    return render_template('index.html')
+    return render_template('landing.html')
+
+# NEW: This route serves the actual game page.
+@app.route('/game')
+def game_page():
+    return render_template('game.html')
 
 @app.route('/start_game', methods=['POST'])
 def start_game():
-    # Use the hard-coded earliest year instead of a user input
-    earliest_year_input = EARLIEST_YEAR
-    session['earliest_year_input'] = earliest_year_input
-
-    # Retrieve players from the single pre-filtered dataframe
+    # MODIFIED: Removed user input for year. The game now uses the hardcoded EARLIEST_YEAR.
+    # The pre-filtered dataframe already accounts for this.
     players_for_year = eligible_players_prefiltered.copy()
 
     if players_for_year.empty:
-        return jsonify({"error": "No eligible players found for that year range."})
+        return jsonify({"error": "No eligible players found for the configured year range."})
 
     selected_player_name = random.choice(players_for_year['Player'].unique().tolist())
     
@@ -182,16 +184,9 @@ def start_game():
     all_columns = ['Year', 'FantPos', 'G', 'PPR', 'PPR_Rank_by_Pos', 
                    'PassYds', 'PassTD', 'RushYds', 'RushTD', 'Rec', 'RecYds', 'RecTD']
 
-    columns_to_show = []
-    if selected_player_position == 'QB':
-        columns_to_show = [col for col in all_columns if col not in ['Rec', 'RecYds', 'RecTD']]
-    elif selected_player_position in ['RB', 'WR', 'TE']:
-        columns_to_show = [col for col in all_columns if col not in ['PassYds', 'PassTD']]
-    else:
-        columns_to_show = all_columns
+    columns_to_show = [col for col in all_columns if col in player_history_df.columns]
     
     display_df = player_history_df[columns_to_show]
-
     stats_json = display_df.to_dict('records')
 
     session['correct_player_name'] = selected_player_name.lower()
@@ -215,23 +210,23 @@ def suggest_players():
     data = request.get_json()
     query = data.get('query', '').strip().lower()
     
-    earliest_year_input = session.get('earliest_year_input')
+    # MODIFIED: Removed dependency on earliest_year from session.
     position = session.get('correct_player', {}).get('FantPos')
 
-    if not query or len(query) < 2 or not earliest_year_input or not position:
+    if not query or len(query) < 2 or not position:
         return jsonify([])
 
-    # Use the single pre-filtered dataframe
+    # Use the single pre-filtered dataframe for suggestions.
     filtered_df = eligible_players_prefiltered[
         (eligible_players_prefiltered['FantPos'] == position) &
-        (
-            eligible_players_prefiltered['Player'].str.lower().str.contains(query, na=False)
-        )
+        (eligible_players_prefiltered['Player'].str.lower().str.contains(query, na=False))
     ]
     
     unique_players = filtered_df['Player'].unique().tolist()
     
     return jsonify(unique_players[:10])
+
+# --- The /guess and /hint routes remain unchanged as they are correct ---
 
 @app.route('/guess', methods=['POST'])
 def handle_guess():
@@ -290,6 +285,7 @@ def get_hint():
     return jsonify({'message': hint_message})
 
 if __name__ == '__main__':
+    # Ensure the templates directory exists for Flask
     if not os.path.exists('templates'):
         os.makedirs('templates')
     #app.run(debug=True, port=5000)
