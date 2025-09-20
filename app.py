@@ -46,6 +46,7 @@ if os.path.exists(processed_data_path):
     print("Data loaded instantly!")
 else:
     print("No cached file found. Loading and combining raw data...")
+    # (Data processing logic remains the same)
     for year in years:
         file_name = f'player_stats{year}.csv'
         file_path = os.path.join(base_dir, file_name)
@@ -191,15 +192,22 @@ def handle_guess():
         session['guesses_remaining'] -= 1
         tries_left = session['guesses_remaining']
         if tries_left > 0:
-            if session['guesses_remaining'] == 3:
+            hint = ""
+            if tries_left == 3:
                 hint = f"Hint: This player spent most of their seasons in the **{session['hints']['conference']}**."
-            elif session['guesses_remaining'] == 2:
+            elif tries_left == 2:
                 hint = f"Hint: This player spent most of their seasons in the **{session['hints']['conference']} {session['hints']['division']}**."
-            elif session['guesses_remaining'] == 1:
+            elif tries_left == 1:
                 hint = f"Hint: This player spent most of their seasons with **{session['hints']['team']}**."
-            else:
-                hint = ""
-            return jsonify({'result': 'incorrect', 'message': "❌ Incorrect guess.", 'hint': hint, 'guesses_left': tries_left})
+            
+            # MODIFIED: Send a flag when it's the last guess
+            return jsonify({
+                'result': 'incorrect', 
+                'message': "❌ Incorrect guess.", 
+                'hint': hint, 
+                'guesses_left': tries_left,
+                'is_last_guess': tries_left == 1
+            })
         else:
             final_message = f"❌ Out of guesses! The correct player was **{session['correct_player_name'].title()}**."
             session.pop('guesses_remaining', None)
@@ -208,25 +216,40 @@ def handle_guess():
 @app.route('/hint', methods=['POST'])
 def get_hint():
     guesses_left = session.get('guesses_remaining')
-    if guesses_left is None or guesses_left <= 0:
-        return jsonify({'message': 'You have no guesses left to get a hint!'}), 400
+    if guesses_left is None or guesses_left <= 1: # MODIFIED: Prevent using hint on last guess
+        return jsonify({'message': 'You cannot use a hint on your last guess!'}), 400
+    
     session['guesses_remaining'] -= 1
+    current_guesses = session['guesses_remaining']
     
     hints = session.get('hints')
-    if session['guesses_remaining'] == 3:
+    hint_message = ""
+    if current_guesses == 3:
         hint_message = f"Hint: This player spent most of their seasons in the **{hints['conference']}**."
-    elif session['guesses_remaining'] == 2:
+    elif current_guesses == 2:
         hint_message = f"Hint: This player spent most of their seasons in the **{hints['conference']} {hints['division']}**."
-    elif session['guesses_remaining'] == 1:
+    elif current_guesses == 1:
         hint_message = f"Hint: This player spent most of their seasons with **{hints['team']}**."
-    else:
-        final_message = f"❌ Out of guesses! The correct player was **{session['correct_player_name'].title()}**."
-        session.pop('guesses_remaining', None)
-        return jsonify({'result': 'out_of_guesses', 'message': final_message})
-    return jsonify({'message': hint_message, 'guesses_left': session['guesses_remaining']})
+    
+    # MODIFIED: Corrected hint logic, removed premature game-over
+    return jsonify({
+        'message': hint_message, 
+        'guesses_left': current_guesses,
+        'is_last_guess': current_guesses == 1
+    })
+
+# NEW: Route for the "Give Up" button
+@app.route('/give_up', methods=['POST'])
+def give_up():
+    if 'correct_player_name' not in session:
+        return jsonify({"error": "Game not started. Please refresh."}), 400
+        
+    final_message = f"The correct player was **{session['correct_player_name'].title()}**. Better luck next time!"
+    session.pop('guesses_remaining', None)
+    return jsonify({'result': 'out_of_guesses', 'message': final_message})
 
 if __name__ == '__main__':
     if not os.path.exists('templates'):
         os.makedirs('templates')
-    #app.run(debug=True, port=5000)
+    app.run(debug=True, port=5000)
 
