@@ -1,6 +1,8 @@
 import os
 import random
+import math
 import pandas as pd
+import numpy as np
 from flask import Flask, jsonify, request, session, render_template
 from datetime import date
 
@@ -11,7 +13,7 @@ app.secret_key = os.environ.get("SECRET_KEY", "dev_key_for_local")
 # --- Data & Game Configuration ---
 base_dir = os.path.join(os.path.dirname(__file__), 'stats')
 processed_data_path = os.path.join(base_dir, 'combined_stats.csv')
-daily_player_order_path = os.path.join(base_dir, 'daily_player_order.csv') 
+daily_player_order_path = os.path.join(base_dir, 'daily_player_order.csv')
 EARLIEST_YEAR = 2011
 START_DATE = date(2025, 9, 20)
 
@@ -40,7 +42,7 @@ team_info = {
     'TOT': {'conf': 'N/A', 'div': 'N/A'}, 'FA': {'conf': 'N/A', 'div': 'N/A'}
 }
 
-# (Data processing logic remains the same)
+# --- Load / Process Data (same logic, but defensive) ---
 if os.path.exists(processed_data_path):
     print("Loading data from cached file...")
     combined_df = pd.read_csv(processed_data_path)
@@ -51,10 +53,12 @@ else:
     for year in years:
         file_name = f'player_stats{year}.csv'
         file_path = os.path.join(base_dir, file_name)
-        if not os.path.exists(file_path) or not os.access(file_path, os.R_OK): continue
+        if not os.path.exists(file_path) or not os.access(file_path, os.R_OK):
+            continue
         try:
             df = pd.read_csv(file_path)
-            if 'Player' not in df.columns: continue
+            if 'Player' not in df.columns:
+                continue
             df['Tm'] = df['Tm'].replace(team_name_map)
             df['Year'] = year
             all_dfs.append(df)
@@ -65,7 +69,11 @@ else:
         print("Error: No data files found. Exiting.")
         exit()
     combined_df = pd.concat(all_dfs, ignore_index=True)
-    combined_df = combined_df.rename(columns={'Yds': 'PassYds', 'TD': 'PassTD', 'Yds.1': 'RushYds', 'TD.1': 'RushTD', 'Yds.2': 'RecYds', 'TD.2': 'RecTD'})
+    combined_df = combined_df.rename(columns={
+        'Yds': 'PassYds', 'TD': 'PassTD',
+        'Yds.1': 'RushYds', 'TD.1': 'RushTD',
+        'Yds.2': 'RecYds', 'TD.2': 'RecTD'
+    })
     int_cols = ['G', 'PassYds', 'PassTD', 'RushYds', 'RushTD', 'Rec', 'RecYds', 'RecTD']
     for col in int_cols:
         if col in combined_df.columns:
@@ -106,12 +114,15 @@ daily_player_list = pd.read_csv(daily_player_order_path)['Player'].tolist()
 print(f"{len(daily_player_list)} daily players loaded.")
 
 def get_most_frequent_with_tiebreaker(df, column):
-    if df.empty: return "N/A"
+    if df.empty:
+        return "N/A"
     counts = df[column].value_counts()
-    if counts.empty: return "N/A"
+    if counts.empty:
+        return "N/A"
     max_seasons = counts.max()
     tied_values = counts[counts == max_seasons].index.tolist()
-    if len(tied_values) == 1: return tied_values[0]
+    if len(tied_values) == 1:
+        return tied_values[0]
     else:
         most_recent_year, most_recent_value = 0, "N/A"
         for value in tied_values:
@@ -129,17 +140,55 @@ def setup_player_game(player_name):
     team_details = team_info.get(most_frequent_team, {})
     consistent_conference, consistent_division = team_details.get('conf', 'N/A'), team_details.get('div', 'N/A')
     selected_player_position = player_history_df.iloc[0]['FantPos']
-    session.clear() 
+    session.clear()
     session['correct_player_name'] = player_name.lower()
     session['guesses_remaining'] = 4
     session['correct_last_name'] = player_name.lower().split()[-1]
     session['hints'] = {'conference': consistent_conference, 'division': consistent_division, 'team': most_frequent_team}
-    
-    # ✅ Replace NaN with None so JSON is valid
-    player_history_df = player_history_df.where(pd.notnull(player_history_df), None)
-    stats_json = player_history_df.to_dict('records')
-    
-    return {'position': selected_player_position, 'stats': stats_json}
+
+    # ----- Strict JSON safety: convert NaN/NaT/pandas NA and numpy types to Python None/int/float -----
+    # Make a copy and replace NA-like values
+    df_safe = player_history_df.copy()
+    df_safe = df_safe.replace({pd.NA: None, pd.NaT: None})
+    df_safe = df_safe.where(pd.notnull(df_safe), None)
+
+    # Convert to records (this still may have numpy types)
+    stats_json = df_safe.to_dict('records')
+
+    # Walk and normalize items to plain Python types & convert any remaining NaN to None
+    normalized = []
+    for row in stats_json:
+        new_row = {}
+        for k, v in row.items():
+            # handle numpy ints/floats
+            if isinstance(v, (np.integer,)):
+                new_row[k] = int(v)
+            elif isinstance(v, (np.floating,)):
+                # check for nan
+                if math.isnan(float(v)):
+                    new_row[k] = None
+                else:
+                    # convert to plain float (or int if it's whole)
+                    fv = float(v)
+                    if fv.is_integer():
+                        new_row[k] = int(fv)
+                    else:
+                        new_row[k] = fv
+            elif v is None:
+                new_row[k] = None
+            else:
+                # ensure built-in python types (str, int, float, bool)
+                try:
+                    # basic sanitization: convert numpy scalar to python scalar if present
+                    if hasattr(v, 'item'):
+                        new_row[k] = v.item()
+                    else:
+                        new_row[k] = v
+                except Exception:
+                    new_row[k] = None
+        normalized.append(new_row)
+
+    return {'position': selected_player_position, 'stats': normalized}
 
 @app.route('/')
 def home():
@@ -178,7 +227,6 @@ def suggest_players():
     if player_info.empty:
         return jsonify([])
     position = player_info.iloc[0]['FantPos']
-    
     if not query or len(query) < 2 or not position:
         return jsonify([])
     filtered_df = eligible_players_prefiltered[
@@ -204,9 +252,12 @@ def handle_guess():
         tries_left = session['guesses_remaining']
         if tries_left > 0:
             hint = ""
-            if tries_left == 3: hint = f"Hint: This player spent most of their seasons in the **{session['hints']['conference']}**."
-            elif tries_left == 2: hint = f"Hint: This player spent most of their seasons in the **{session['hints']['conference']} {session['hints']['division']}**."
-            elif tries_left == 1: hint = f"Hint: This player spent most of their seasons with **{session['hints']['team']}**."
+            if tries_left == 3:
+                hint = f"Hint: This player spent most of their seasons in the **{session['hints']['conference']}**."
+            elif tries_left == 2:
+                hint = f"Hint: This player spent most of their seasons in the **{session['hints']['conference']} {session['hints']['division']}**."
+            elif tries_left == 1:
+                hint = f"Hint: This player spent most of their seasons with **{session['hints']['team']}**."
             return jsonify({'result': 'incorrect', 'message': "❌ Incorrect guess.", 'hint': hint, 'guesses_left': tries_left, 'is_last_guess': tries_left == 1})
         else:
             final_message = f"❌ Out of guesses! The correct player was **{session['correct_player_name'].title()}**."
@@ -221,9 +272,12 @@ def get_hint():
     current_guesses = session['guesses_remaining']
     hints = session.get('hints')
     hint_message = ""
-    if current_guesses == 3: hint_message = f"Hint: This player spent most of their seasons in the **{hints['conference']}**."
-    elif current_guesses == 2: hint_message = f"Hint: This player spent most of their seasons in the **{hints['conference']} {session['hints']['division']}**."
-    elif current_guesses == 1: hint_message = f"Hint: This player spent most of their seasons with **{session['hints']['team']}**."
+    if current_guesses == 3:
+        hint_message = f"Hint: This player spent most of their seasons in the **{hints['conference']}**."
+    elif current_guesses == 2:
+        hint_message = f"Hint: This player spent most of their seasons in the **{hints['conference']} {session['hints']['division']}**."
+    elif current_guesses == 1:
+        hint_message = f"Hint: This player spent most of their seasons with **{session['hints']['team']}**."
     return jsonify({'message': hint_message, 'guesses_left': current_guesses, 'is_last_guess': current_guesses == 1})
 
 @app.route('/give_up', methods=['POST'])
@@ -236,4 +290,5 @@ def give_up():
 if __name__ == '__main__':
     if not os.path.exists('templates'):
         os.makedirs('templates')
-    app.run(debug=True, port=5000)
+    # Bind to all interfaces so Render can reach it
+    app.run(host='0.0.0.0', debug=True, port=int(os.environ.get("PORT", 5000)))
