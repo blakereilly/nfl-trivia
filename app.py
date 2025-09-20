@@ -151,20 +151,16 @@ if eligible_players_prefiltered.empty:
 print("All eligible players pre-filtered and stored!")
 
 # --- Flask Routes ---
-# MODIFIED: This route now serves the landing page.
 @app.route('/')
 def home():
     return render_template('landing.html')
 
-# NEW: This route serves the actual game page.
 @app.route('/game')
 def game_page():
     return render_template('game.html')
 
 @app.route('/start_game', methods=['POST'])
 def start_game():
-    # MODIFIED: Removed user input for year. The game now uses the hardcoded EARLIEST_YEAR.
-    # The pre-filtered dataframe already accounts for this.
     players_for_year = eligible_players_prefiltered.copy()
 
     if players_for_year.empty:
@@ -175,9 +171,15 @@ def start_game():
     player_history_df = players_for_year[players_for_year['Player'] == selected_player_name].copy()
     player_history_df = player_history_df.sort_values(by='Year')
 
+    # --- MODIFIED: Hint logic is now consistent ---
+    # 1. Find the primary team first.
     most_frequent_team = get_most_frequent_with_tiebreaker(player_history_df, 'Tm')
-    most_frequent_conference = get_most_frequent_with_tiebreaker(player_history_df, 'Conference')
-    most_frequent_division = get_most_frequent_with_tiebreaker(player_history_df, 'Division')
+    
+    # 2. Derive the conference and division from that team.
+    team_details = team_info.get(most_frequent_team, {})
+    consistent_conference = team_details.get('conf', 'N/A')
+    consistent_division = team_details.get('div', 'N/A')
+    # --- END MODIFICATION ---
 
     selected_player_position = player_history_df.iloc[0]['FantPos']
 
@@ -194,9 +196,10 @@ def start_game():
     session['guesses_remaining'] = 4
     session['correct_last_name'] = selected_player_name.lower().split()[-1]
     
+    # MODIFIED: Store the new, consistent hints in the session.
     session['hints'] = {
-        'conference': most_frequent_conference,
-        'division': most_frequent_division,
+        'conference': consistent_conference,
+        'division': consistent_division,
         'team': most_frequent_team
     }
     
@@ -210,13 +213,11 @@ def suggest_players():
     data = request.get_json()
     query = data.get('query', '').strip().lower()
     
-    # MODIFIED: Removed dependency on earliest_year from session.
     position = session.get('correct_player', {}).get('FantPos')
 
     if not query or len(query) < 2 or not position:
         return jsonify([])
 
-    # Use the single pre-filtered dataframe for suggestions.
     filtered_df = eligible_players_prefiltered[
         (eligible_players_prefiltered['FantPos'] == position) &
         (eligible_players_prefiltered['Player'].str.lower().str.contains(query, na=False))
@@ -225,8 +226,6 @@ def suggest_players():
     unique_players = filtered_df['Player'].unique().tolist()
     
     return jsonify(unique_players[:10])
-
-# --- The /guess and /hint routes remain unchanged as they are correct ---
 
 @app.route('/guess', methods=['POST'])
 def handle_guess():
@@ -285,7 +284,7 @@ def get_hint():
     return jsonify({'message': hint_message})
 
 if __name__ == '__main__':
-    # Ensure the templates directory exists for Flask
     if not os.path.exists('templates'):
         os.makedirs('templates')
-    #app.run(debug=True, port=5000)
+    app.run(debug=True, port=5000)
+
