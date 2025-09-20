@@ -4,11 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FumbLe - The Game</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; }
         html, body {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            font-family: Arial, sans-serif; background: #10141a; color: #f5f5f5;
+            margin: 0; padding: 0; width: 100%;
+            font-family: 'Inter', sans-serif; 
+            background: linear-gradient(135deg, #0d1218, #1f232b, #001a33);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            color: #f5f5f5;
+            min-height: 100%;
+        }
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
         .page-wrapper {
             position: relative; width: 100%; min-height: 100vh;
@@ -18,59 +31,121 @@
         .main-content {
             display: flex; flex-direction: column; align-items: center;
             width: 100%; max-width: 1200px; text-align: center;
+            background: rgba(42, 46, 52, 0.5);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 242, 234, 0.2);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37), 0 0 15px rgba(0, 242, 234, 0.1);
         }
-        h1 { margin: 0 0 10px 0; }
+        h1 { 
+            margin: 0 0 10px 0; 
+            font-size: 3rem;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(0, 242, 234, 0.5), 0 0 20px rgba(0, 242, 234, 0.3);
+        }
         #playerPosition {
-            font-size: 20px; color: #bbb; margin: 10px 0;
-            font-weight: bold; font-style: italic;
+            font-size: 1.5rem; color: #00f2ea; margin: 10px 0 20px 0;
+            font-weight: 600;
         }
         .game-controls {
-            display: flex; flex-direction: column; align-items: center; margin-bottom: 15px; width: 100%; max-width: 300px;
+            display: flex; flex-direction: column; align-items: center; margin-bottom: 15px; width: 100%; max-width: 350px;
+            gap: 10px;
         }
         .table-container {
             overflow-x: auto; width: 100%; margin: 15px 0;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 242, 234, 0.1);
         }
         #statsTable {
             width: 100%; border-collapse: collapse; font-size: 14px; min-width: 600px;
         }
         #statsTable th, #statsTable td {
-            border: 1px solid #444; padding: 8px; white-space: nowrap; text-align: center;
+            border: none;
+            border-bottom: 1px solid #2a2e34;
+            padding: 14px; white-space: nowrap; text-align: center;
         }
         #statsTable th {
-            background-color: #2c7be5; color: white; padding: 12px 8px;
+            background-color: #2c7be5; color: white; font-weight: 600;
         }
-        #statsTable tr:nth-child(even) { background-color: #1a1e24; }
+        #statsTable th:first-child { border-radius: 12px 0 0 0; }
+        #statsTable th:last-child { border-radius: 0 12px 0 0; }
+        #statsTable tr:last-child td:first-child { border-radius: 0 0 0 12px; }
+        #statsTable tr:last-child td:last-child { border-radius: 0 0 12px 0; }
+        #statsTable tr:nth-child(even) { background-color: rgba(26, 30, 36, 0.7); }
+        #statsTable tr { transition: background-color 0.2s ease; }
         #statsTable tr:hover { background-color: #1f232b; }
-        .highlight-green { background-color: #4CAF50; color: black; }
-        .highlight-yellow { background-color: #FFC107; color: black; }
-        .highlight-red { background-color: #F44336; color: black; }
-        input, button, select {
-            padding: 10px; font-size: 16px; margin: 5px; border-radius: 5px; border: none; width: 100%;
-        }
-        button { background-color: #2c7be5; color: white; cursor: pointer; }
-        button:hover { background-color: #1a5bb8; }
-        button:disabled { background-color: #555; cursor: not-allowed; }
-        #feedback { margin-top: 15px; font-size: 18px; min-height: 25px; }
+        .highlight-green { background-color: #4CAF50 !important; color: white !important; font-weight: 600; }
+        .highlight-yellow { background-color: #FFC107 !important; color: #1a1e24 !important; font-weight: 600; }
+        .highlight-red { background-color: #F44336 !important; color: white !important; font-weight: 600; }
         
+        input, button {
+            padding: 12px; font-size: 16px; margin: 5px; border-radius: 8px; border: none; width: 100%;
+            transition: all 0.3s ease;
+        }
+        button { 
+            background-color: #2c7be5; color: white; cursor: pointer; font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        button:hover:not(:disabled) { 
+            background-color: #1a5bb8;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(44, 123, 229, 0.4), 0 0 15px rgba(44, 123, 229, 0.5);
+        }
+        button:disabled { background-color: #555; cursor: not-allowed; color: #999; border-color: #555; }
+        
+        /* NEW: Style for the hint button */
+        .hint-button {
+            background-color: transparent;
+            border: 2px solid #2c7be5;
+            color: #2c7be5;
+        }
+        .hint-button:hover:not(:disabled) {
+            background-color: #2c7be5;
+            color: white;
+        }
+
+        input[type="text"] {
+            background-color: #2a2e34;
+            color: #f5f5f5;
+            border: 1px solid #444;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #00f2ea;
+            box-shadow: 0 0 8px rgba(0, 242, 234, 0.5);
+        }
+
+        #feedback { 
+            margin-top: 15px; font-size: 18px; min-height: 25px;
+            font-weight: 600;
+            transition: color 0.4s ease-in-out;
+        }
+        #feedback.correct-guess { color: #4CAF50; }
+        #feedback.incorrect-guess { color: #F44336; }
+
         #rules-container {
             position: absolute; top: 15px; left: 15px; z-index: 1000;
         }
         #rules-button {
-            background-color: rgba(255, 255, 255, 0.1);
-            border: 1px solid #555;
+            background-color: rgba(42, 46, 52, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             color: #f5f5f5;
             font-weight: bold;
             font-size: 18px;
-            width: 36px;
-            height: 36px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             cursor: pointer;
             padding: 0;
-            line-height: 36px;
+            line-height: 40px;
             text-align: center;
+            transition: all 0.3s ease;
         }
         #rules-button:hover {
-             background-color: rgba(44, 123, 229, 0.5);
+             background-color: rgba(44, 123, 229, 0.8);
+             transform: scale(1.1);
         }
 
         #logo, #data-source { position: absolute; }
@@ -80,12 +155,17 @@
         
         .modal {
             display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.7); align-items: center; justify-content: center;
+            background-color: rgba(0,0,0,0.6); 
+            backdrop-filter: blur(5px);
+            align-items: center; justify-content: center;
         }
         .modal.active { display: flex; }
         .modal-content {
-            background-color: #1a1e24; padding: 20px; border: 1px solid #888;
-            width: 90%; max-width: 500px; border-radius: 10px; position: relative; color: white;
+            background: rgba(30, 35, 41, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            width: 90%; max-width: 500px; border-radius: 16px; position: relative; color: white;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
         }
         .close-button {
             color: #aaa; position: absolute; top: 10px; right: 15px;
@@ -103,8 +183,31 @@
         #suggestions div { padding: 10px; cursor: pointer; }
         #suggestions div:hover { background-color: #2c7be5; }
 
+        .loader {
+            border: 4px solid rgba(243, 243, 243, 0.3);
+            border-top: 4px solid #00f2ea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .fade-in {
+            animation: fadeIn 0.8s ease-in-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         @media (max-width: 768px) {
-            .page-wrapper { padding: 60px 10px 120px 10px; justify-content: flex-start; }
+            .page-wrapper { padding: 20px 10px 120px 10px; justify-content: flex-start; }
+            .main-content { padding: 20px; }
+            h1 { font-size: 2.5rem; }
             #logo { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 80px; }
             #data-source { position: fixed; bottom: 5px; right: 5px; font-size: 8px; }
             #rules-container { top: 10px; left: 10px; }
@@ -120,19 +223,23 @@
         <div class="main-content">
             <h1>FumbLe</h1>
             
-            <div class="game-controls">
+            <div id="loader" class="loader" style="display: none;"></div>
+
+            <div class="game-controls" style="visibility: hidden;">
                 <div class="autocomplete-container">
                     <input type="text" id="guessInput" placeholder="Enter player name" disabled>
                     <div id="suggestions"></div>
                 </div>
-                <button id="guessButton" disabled>Guess</button>
-                <button id="hintButton" disabled>Get Hint</button>
+                <!-- MODIFIED: Changed button text -->
+                <button id="guessButton" disabled>Enter</button>
+                <!-- MODIFIED: Added 'hint-button' class -->
+                <button id="hintButton" class="hint-button" disabled>Get Hint</button>
             </div>
 
             <p id="feedback"></p>
-            <p id="playerPosition"></p>
+            <p id="playerPosition" style="visibility: hidden;"></p>
 
-            <div class="table-container">
+            <div class="table-container" style="visibility: hidden;">
                 <table id="statsTable">
                     <thead></thead>
                     <tbody></tbody>
@@ -159,7 +266,6 @@
     </div>
 
     <script>
-        // --- FIXED: Consolidated all element selections to the top to prevent errors ---
         const guessInput = document.getElementById("guessInput");
         const guessButton = document.getElementById("guessButton");
         const hintButton = document.getElementById("hintButton");
@@ -170,6 +276,9 @@
         const rulesButton = document.getElementById('rules-button');
         const rulesModal = document.getElementById('rulesModal');
         const closeRulesButton = document.getElementById('close-rules-button');
+        const loader = document.getElementById('loader');
+        const gameControls = document.querySelector('.game-controls');
+        const tableContainer = document.querySelector('.table-container');
 
         const columnMap = {
             "Year": "Yr", "G": "Games", "PPR": "PPR Pts", "PPR_Rank_by_Pos": "PPR Rank",
@@ -178,7 +287,6 @@
         };
         let debounceTimeout;
 
-        // --- FIXED: Centralized all event listeners ---
         document.addEventListener('DOMContentLoaded', startGame);
         guessButton.addEventListener('click', submitGuess);
         hintButton.addEventListener('click', getHint);
@@ -202,9 +310,16 @@
             }
         });
 
-        // --- Main Game Functions ---
         async function startGame() {
-            feedbackP.textContent = "Loading stats...";
+            feedbackP.textContent = "";
+            loader.style.display = 'block';
+            gameControls.style.visibility = 'hidden';
+            playerPositionP.style.visibility = 'hidden';
+            tableContainer.style.visibility = 'hidden';
+            gameControls.classList.remove('fade-in');
+            playerPositionP.classList.remove('fade-in');
+            tableContainer.classList.remove('fade-in');
+
             guessInput.disabled = true;
             guessButton.disabled = true;
             hintButton.disabled = true;
@@ -216,6 +331,8 @@
                     body: JSON.stringify({}) 
                 });
                 const data = await response.json();
+
+                loader.style.display = 'none';
 
                 if (data.error) {
                     feedbackP.textContent = data.error;
@@ -231,7 +348,16 @@
                 guessButton.disabled = false;
                 hintButton.disabled = false;
                 statsTable.style.display = 'table';
+
+                gameControls.style.visibility = 'visible';
+                playerPositionP.style.visibility = 'visible';
+                tableContainer.style.visibility = 'visible';
+                gameControls.classList.add('fade-in');
+                playerPositionP.classList.add('fade-in');
+                tableContainer.classList.add('fade-in');
+
             } catch (error) {
+                loader.style.display = 'none';
                 feedbackP.textContent = "Failed to start the game. Please try again.";
                 console.error("Start Game Error:", error);
             }
@@ -282,6 +408,9 @@
             const guess = guessInput.value.trim();
             if (!guess) return;
             guessInput.value = '';
+
+            feedbackP.classList.remove('correct-guess', 'incorrect-guess');
+
             const response = await fetch('/guess', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -289,6 +418,13 @@
             });
             const data = await response.json();
             feedbackP.innerHTML = data.message + (data.hint ? `<br><br>${data.hint}` : '');
+
+            if(data.result === 'correct') {
+                feedbackP.classList.add('correct-guess');
+            } else {
+                feedbackP.classList.add('incorrect-guess');
+            }
+
             if (data.result === 'correct' || data.result === 'out_of_guesses') {
                 guessInput.disabled = true;
                 guessButton.disabled = true;
@@ -297,12 +433,14 @@
         }
         
         async function getHint() {
+            feedbackP.classList.remove('correct-guess', 'incorrect-guess');
             const response = await fetch('/hint', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' }
             });
             const data = await response.json();
             feedbackP.innerHTML = data.message;
+            feedbackP.classList.add('incorrect-guess');
         }
 
         function debounce(func, delay) {
@@ -347,3 +485,4 @@
     </script>
 </body>
 </html>
+
