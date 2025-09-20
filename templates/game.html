@@ -308,6 +308,7 @@
     </div>
 
     <script>
+        // --- Element Selections ---
         const allElements = {
             guessInput: document.getElementById("guessInput"),
             guessButton: document.getElementById("guessButton"),
@@ -332,12 +333,14 @@
             playAgainButton: document.getElementById('play-again-button')
         };
 
+        // --- Constants & State ---
         const columnMap = { "Year": "Yr", "G": "Games", "PPR": "PPR Pts", "PPR_Rank_by_Pos": "PPR Rank", "PassYds": "Pass Yd", "PassTD": "Pass TD", "Rec": "Rec", "RecYds": "Rec Yd", "RecTD": "Rec TD", "RushYds": "Rush Yd", "RushTD": "Rush TD" };
         let debounceTimeout;
         let shareableText = '';
         const LOCAL_STORAGE_KEY = 'fumbleDailyState';
         const isRandomMode = window.location.pathname.includes('/random');
 
+        // --- Event Listeners ---
         document.addEventListener('DOMContentLoaded', initializeGame);
         allElements.guessButton.addEventListener('click', submitGuess);
         allElements.hintButton.addEventListener('click', handleHintOrGiveUp);
