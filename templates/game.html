@@ -308,111 +308,381 @@
     </div>
 
     <script>
-        const guessInput = document.getElementById("guessInput");
-        const guessButton = document.getElementById("guessButton");
-        const hintButton = document.getElementById("hintButton");
-        const feedbackP = document.getElementById("feedback");
-        const playerPositionP = document.getElementById("playerPosition");
-        const statsTable = document.getElementById("statsTable");
-        const suggestionsDiv = document.getElementById("suggestions");
-        const rulesButton = document.getElementById('rules-button');
-        const rulesModal = document.getElementById('rulesModal');
-        const closeRulesButton = document.getElementById('close-rules-button');
-        const loader = document.getElementById('loader');
-        const gameControls = document.querySelector('.game-controls');
-        const tableContainer = document.querySelector('.table-container');
-        const guessesLeftDisplay = document.getElementById('guesses-left-display');
-        const shareModal = document.getElementById('shareModal');
-        const closeShareButton = document.getElementById('close-share-button');
-        const shareTitle = document.getElementById('share-title');
-        const shareDate = document.getElementById('share-date');
-        const shareGrid = document.getElementById('share-grid');
-        const copyResultsButton = document.getElementById('copy-results-button');
-        const playAgainButton = document.getElementById('play-again-button');
-
-
-        const columnMap = {
-            "Year": "Yr", "G": "Games", "PPR": "PPR Pts", "PPR_Rank_by_Pos": "PPR Rank",
-            "PassYds": "Pass Yd", "PassTD": "Pass TD", "Rec": "Rec", "RecYds": "Rec Yd", "RecTD": "Rec TD",
-            "RushYds": "Rush Yd", "RushTD": "Rush TD",
+        // --- Element Selections ---
+        const allElements = {
+            guessInput: document.getElementById("guessInput"),
+            guessButton: document.getElementById("guessButton"),
+            hintButton: document.getElementById("hintButton"),
+            feedbackP: document.getElementById("feedback"),
+            playerPositionP: document.getElementById("playerPosition"),
+            statsTable: document.getElementById("statsTable"),
+            suggestionsDiv: document.getElementById("suggestions"),
+            rulesButton: document.getElementById('rules-button'),
+            rulesModal: document.getElementById('rulesModal'),
+            closeRulesButton: document.getElementById('close-rules-button'),
+            loader: document.getElementById('loader'),
+            gameControls: document.querySelector('.game-controls'),
+            tableContainer: document.querySelector('.table-container'),
+            guessesLeftDisplay: document.getElementById('guesses-left-display'),
+            shareModal: document.getElementById('shareModal'),
+            closeShareButton: document.getElementById('close-share-button'),
+            shareTitle: document.getElementById('share-title'),
+            shareDate: document.getElementById('share-date'),
+            shareGrid: document.getElementById('share-grid'),
+            copyResultsButton: document.getElementById('copy-results-button'),
+            playAgainButton: document.getElementById('play-again-button')
         };
+
+        // --- Constants & State ---
+        const columnMap = { "Year": "Yr", "G": "Games", "PPR": "PPR Pts", "PPR_Rank_by_Pos": "PPR Rank", "PassYds": "Pass Yd", "PassTD": "Pass TD", "Rec": "Rec", "RecYds": "Rec Yd", "RecTD": "Rec TD", "RushYds": "Rush Yd", "RushTD": "Rush TD" };
         let debounceTimeout;
         let shareableText = '';
+        const LOCAL_STORAGE_KEY = 'fumbleDailyState';
+        const isRandomMode = window.location.pathname.includes('/random');
 
+        // --- Event Listeners ---
         document.addEventListener('DOMContentLoaded', initializeGame);
-        guessButton.addEventListener('click', submitGuess);
-        hintButton.addEventListener('click', handleHintOrGiveUp);
-        rulesButton.addEventListener('click', () => rulesModal.classList.add('active'));
-        closeRulesButton.addEventListener('click', () => rulesModal.classList.remove('active'));
-        rulesModal.addEventListener('click', (event) => {
-            if (event.target === rulesModal) rulesModal.classList.remove('active');
-        });
-        closeShareButton.addEventListener('click', () => shareModal.classList.remove('active'));
-        playAgainButton.addEventListener('click', () => {
-            shareModal.classList.remove('active');
-            startGame();
-        });
-        copyResultsButton.addEventListener('click', copyResultsToClipboard);
-        guessInput.addEventListener("input", debounce(handleGuessInput, 300));
-        guessInput.addEventListener("keydown", (event) => {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                submitGuess();
-            }
-        });
-        document.body.addEventListener('click', (event) => {
-            if (!event.target.closest('.autocomplete-container')) {
-                suggestionsDiv.style.display = 'none';
-            }
-        });
+        allElements.guessButton.addEventListener('click', submitGuess);
+        allElements.hintButton.addEventListener('click', handleHintOrGiveUp);
+        allElements.rulesButton.addEventListener('click', () => allElements.rulesModal.classList.add('active'));
+        allElements.closeRulesButton.addEventListener('click', () => allElements.rulesModal.classList.remove('active'));
+        allElements.rulesModal.addEventListener('click', (e) => { if (e.target === allElements.rulesModal) allElements.rulesModal.classList.remove('active'); });
+        allElements.closeShareButton.addEventListener('click', () => allElements.shareModal.classList.remove('active'));
+        allElements.playAgainButton.addEventListener('click', handlePlayAgain);
+        allElements.copyResultsButton.addEventListener('click', copyResultsToClipboard);
+        allElements.guessInput.addEventListener("input", debounce(handleGuessInput, 300));
+        allElements.guessInput.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); submitGuess(); } });
+        document.body.addEventListener('click', (e) => { if (!e.target.closest('.autocomplete-container')) { allElements.suggestionsDiv.style.display = 'none'; } });
 
-        function initializeGame() {
-            const savedState = getSavedState();
-            if (savedState) {
-                restoreGameState(savedState);
-            } else {
-                startGame();
-            }
-        }
+        // --- Core Game Logic ---
+        function getTodayString() { return new Date().toISOString().split('T')[0]; }
 
-        async function startGame() {
-            resetUIForNewGame();
+        function getSavedState() {
+            const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (!saved) return null;
             try {
-                const response = await fetch('/start_game', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({}) 
-                });
-                const data = await response.json();
-                loader.style.display = 'none';
-                if (data.error) {
-                    feedbackP.textContent = data.error;
-                    return;
+                const state = JSON.parse(saved);
+                if (state.date !== getTodayString()) {
+                    localStorage.removeItem(LOCAL_STORAGE_KEY);
+                    return null;
                 }
-                
-                const today = new Date().toISOString().split('T')[0];
-                const initialState = {
-                    date: today,
-                    guesses: [],
-                    guessesRemaining: 4,
-                    gameOver: false,
-                    result: null,
-                    playerData: data 
-                };
-                saveState(initialState);
-                setupGameUI(data);
-
-            } catch (error) {
-                loader.style.display = 'none';
-                feedbackP.textContent = "Failed to start the game. Please try again.";
-                console.error("Start Game Error:", error);
+                return state;
+            } catch (e) {
+                localStorage.removeItem(LOCAL_STORAGE_KEY);
+                return null;
             }
         }
         
-        // --- All other JavaScript functions for gameplay logic ---
-        // (Full script with localStorage logic is in my memory from the previous turn)
+        function saveState(state) {
+            if (!isRandomMode) {
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state));
+            }
+        }
+        
+        function initializeGame() {
+            const savedState = getSavedState();
+            if (isRandomMode || !savedState) {
+                startGame(isRandomMode);
+            } else {
+                restoreGameState(savedState);
+            }
+        }
 
+        async function startGame(isRandom) {
+            resetUIForNewGame();
+            const endpoint = isRandom ? '/start_random_game' : '/start_game';
+            try {
+                const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
+                const data = await response.json();
+                allElements.loader.style.display = 'none';
+                if (data.error) {
+                    allElements.feedbackP.textContent = data.error;
+                    return;
+                }
+                
+                if (!isRandom) {
+                    const initialState = { date: getTodayString(), guesses: [], guessesRemaining: 4, gameOver: false, result: null, playerData: data };
+                    saveState(initialState);
+                }
+                setupGameUI(data);
+
+            } catch (error) {
+                allElements.loader.style.display = 'none';
+                allElements.feedbackP.textContent = "Failed to start the game. Please try again.";
+                console.error("Start Game Error:", error);
+            }
+        }
+
+        function restoreGameState(state) {
+            resetUIForNewGame();
+            allElements.loader.style.display = 'none';
+            setupGameUI(state.playerData);
+            
+            state.guesses.forEach(guessData => {
+                const p = document.createElement('p');
+                p.textContent = `Guessed: ${guessData.guess || 'Hint Used'}`;
+                allElements.feedbackP.parentNode.insertBefore(p, allElements.feedbackP);
+            });
+            
+            const lastGuessData = state.guesses[state.guesses.length - 1] || {};
+            updateFeedbackAndGuesses(lastGuessData);
+
+            if (state.gameOver) {
+                endGame(state.result, state.guesses.length);
+            }
+        }
+        
+        async function submitGuess() {
+            const guess = allElements.guessInput.value.trim();
+            if (!guess) return;
+            allElements.guessInput.value = '';
+            allElements.feedbackP.classList.remove('correct-guess', 'incorrect-guess');
+            const response = await fetch('/guess', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ guess: guess }) });
+            const data = await response.json();
+            
+            if (!isRandomMode) {
+                const state = getSavedState();
+                if (state) {
+                    state.guesses.push({ ...data, guess: guess });
+                    state.guessesRemaining = data.guesses_left !== undefined ? data.guesses_left : 0;
+                    if (data.result === 'correct' || data.result === 'out_of_guesses') {
+                        state.gameOver = true;
+                        state.result = data.result;
+                    }
+                    saveState(state);
+                }
+            }
+            
+            updateFeedbackAndGuesses(data);
+            if (data.result === 'correct' || data.result === 'out_of_guesses') {
+                endGame(data.result, data.guesses_taken);
+            }
+        }
+
+        function handleHintOrGiveUp() {
+            if (allElements.hintButton.textContent === 'Give Up?') {
+                giveUp();
+            } else {
+                getHint();
+            }
+        }
+
+        async function getHint() {
+            allElements.feedbackP.classList.remove('correct-guess', 'incorrect-guess');
+            const response = await fetch('/hint', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+            const data = await response.json();
+             if (!isRandomMode) {
+                const state = getSavedState();
+                if (state) {
+                    state.guesses.push({ ...data, guess: null }); // Store hint usage
+                    state.guessesRemaining = data.guesses_left || 0;
+                    saveState(state);
+                }
+            }
+            updateFeedbackAndGuesses(data);
+        }
+
+        async function giveUp() {
+            const response = await fetch('/give_up', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+            const data = await response.json();
+            if (!isRandomMode) {
+                const state = getSavedState();
+                if(state){
+                    state.gameOver = true;
+                    state.result = 'out_of_guesses';
+                    saveState(state);
+                }
+            }
+            updateFeedbackAndGuesses(data);
+            endGame(data.result, data.guesses_taken);
+        }
+
+        // --- UI Helper Functions ---
+        function updateFeedbackAndGuesses(data) {
+            allElements.feedbackP.innerHTML = data.message;
+            if (data.hint) {
+                allElements.feedbackP.innerHTML += `<br><br>${data.hint}`;
+            }
+            if (data.guesses_left !== undefined) {
+                allElements.guessesLeftDisplay.textContent = `Guesses Left: ${data.guesses_left}`;
+                allElements.guessesLeftDisplay.style.display = 'block';
+            } else {
+                allElements.guessesLeftDisplay.style.display = 'none';
+            }
+            if (data.result === 'correct') {
+                allElements.feedbackP.classList.add('correct-guess');
+            } else if (data.message) { // Only add incorrect class if there's a message
+                allElements.feedbackP.classList.add('incorrect-guess');
+            }
+            if (data.is_last_guess) {
+                allElements.hintButton.textContent = 'Give Up?';
+            }
+        }
+        
+        function endGame(result, guessesTaken) {
+            allElements.guessInput.disabled = true;
+            allElements.guessButton.disabled = true;
+            allElements.hintButton.disabled = true;
+            showShareModal(result, guessesTaken);
+        }
+        
+        function resetUIForNewGame() {
+            allElements.feedbackP.textContent = "";
+            allElements.loader.style.display = 'block';
+            ['gameControls', 'playerPositionP', 'tableContainer'].forEach(el => {
+                allElements[el].style.visibility = 'hidden';
+                allElements[el].classList.remove('fade-in');
+            });
+            allElements.feedbackP.classList.remove('correct-guess', 'incorrect-guess');
+            allElements.guessesLeftDisplay.style.display = 'none';
+            allElements.hintButton.textContent = 'Get Hint';
+        }
+
+        function setupGameUI(playerData) {
+            allElements.playerPositionP.textContent = `Position: ${playerData.position}`;
+            renderTable(playerData.stats);
+            allElements.feedbackP.textContent = "Guess the player based on their stats:";
+            allElements.guessInput.value = "";
+            allElements.guessInput.disabled = false;
+            allElements.guessButton.disabled = false;
+            allElements.hintButton.disabled = false;
+            allElements.statsTable.style.display = 'table';
+            ['gameControls', 'playerPositionP', 'tableContainer'].forEach(el => {
+                allElements[el].style.visibility = 'visible';
+                allElements[el].classList.add('fade-in');
+            });
+        }
+        
+        function renderTable(stats) {
+            const tableBody = allElements.statsTable.querySelector("tbody");
+            const tableHead = allElements.statsTable.querySelector("thead");
+            tableBody.innerHTML = '';
+            tableHead.innerHTML = '';
+            if (!stats || stats.length === 0) return;
+            let desiredOrder = ["Year", "G", "PPR", "PPR_Rank_by_Pos"];
+            if (stats[0].FantPos === "QB") {
+                desiredOrder.push("PassYds", "PassTD", "RushYds", "RushTD");
+            } else {
+                desiredOrder.push("RushYds", "RushTD", "Rec", "RecYds", "RecTD");
+            }
+            const headerRow = document.createElement("tr");
+            desiredOrder.forEach(headerText => {
+                if (Object.keys(stats[0]).includes(headerText)) {
+                    const th = document.createElement("th");
+                    th.textContent = columnMap[headerText] || headerText;
+                    headerRow.appendChild(th);
+                }
+            });
+            tableHead.appendChild(headerRow);
+            stats.forEach(statRow => {
+                const row = document.createElement("tr");
+                desiredOrder.forEach(headerText => {
+                    if (Object.keys(stats[0]).includes(headerText)) {
+                        const td = document.createElement("td");
+                        const value = statRow[headerText] != null ? statRow[headerText] : 'N/A';
+                        td.textContent = value;
+                        if (headerText === 'PPR_Rank_by_Pos' && !isNaN(value)) {
+                            const rank = parseInt(value, 10);
+                            if (rank <= 12) td.classList.add('highlight-green');
+                            else if (rank <= 24) td.classList.add('highlight-yellow');
+                            else td.classList.add('highlight-red');
+                        }
+                        row.appendChild(td);
+                    }
+                });
+                tableBody.appendChild(row);
+            });
+        }
+        
+        function showShareModal(result, guessesTaken) {
+            const today = new Date();
+            const dateString = `${today.getMonth() + 1}/${today.getDate()}/${today.getFullYear()}`;
+            allElements.shareDate.textContent = dateString;
+            let grid = '', resultText = '';
+            if (result === 'correct') {
+                allElements.shareTitle.textContent = 'You got it!';
+                resultText = `FumbLe ${dateString}\n🏈 ${guessesTaken}/4`;
+                grid = '⬜'.repeat(guessesTaken - 1) + '🟩' + '⬜'.repeat(4 - guessesTaken);
+            } else {
+                allElements.shareTitle.textContent = 'Nice try!';
+                resultText = `FumbLe ${dateString}\n🏈 X/4`;
+                grid = '🟥🟥🟥🟥';
+            }
+            allElements.shareGrid.textContent = grid;
+            shareableText = `${resultText}\n${grid}`;
+
+            if(isRandomMode){
+                allElements.playAgainButton.textContent = "Play Again";
+                allElements.playAgainButton.disabled = false;
+            } else {
+                allElements.playAgainButton.textContent = "See you tomorrow!";
+                allElements.playAgainButton.disabled = true;
+            }
+
+            allElements.shareModal.classList.add('active');
+        }
+
+        function copyResultsToClipboard() {
+            const textArea = document.createElement('textarea');
+            textArea.value = shareableText;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                allElements.copyResultsButton.textContent = 'Copied!';
+                setTimeout(() => { allElements.copyResultsButton.textContent = 'Copy Results'; }, 2000);
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+            }
+            document.body.removeChild(textArea);
+        }
+        
+        function handlePlayAgain(){
+            allElements.shareModal.classList.remove('active');
+            if(isRandomMode){
+                startGame(true);
+            }
+        }
+
+        function debounce(func, delay) {
+            return function(...args) {
+                clearTimeout(debounceTimeout);
+                debounceTimeout = setTimeout(() => func.apply(this, args), delay);
+            };
+        }
+
+        async function handleGuessInput() {
+            const query = allElements.guessInput.value.trim();
+            if (query.length < 2) {
+                allElements.suggestionsDiv.style.display = 'none';
+                return;
+            }
+            const response = await fetch('/suggest_players', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: query })
+            });
+            const players = await response.json();
+            renderSuggestions(players);
+        }
+
+        function renderSuggestions(players) {
+            allElements.suggestionsDiv.innerHTML = '';
+            if (players && players.length > 0) {
+                players.forEach(player => {
+                    const suggestion = document.createElement('div');
+                    suggestion.textContent = player;
+                    suggestion.addEventListener('click', () => {
+                        allElements.guessInput.value = player;
+                        allElements.suggestionsDiv.style.display = 'none';
+                    });
+                    allElements.suggestionsDiv.appendChild(suggestion);
+                });
+                allElements.suggestionsDiv.style.display = 'block';
+            } else {
+                allElements.suggestionsDiv.style.display = 'none';
+            }
+        }
     </script>
 </body>
 </html>
-
