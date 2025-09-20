@@ -218,7 +218,7 @@ def get_hint():
     hint_message = ""
     if current_guesses == 3: hint_message = f"Hint: This player spent most of their seasons in the **{hints['conference']}**."
     elif current_guesses == 2: hint_message = f"Hint: This player spent most of their seasons in the **{hints['conference']} {session['hints']['division']}**."
-    elif current_guesses == 1: hint_message = f"Hint: This player spent most of their seasons with **{hints['team']}**."
+    elif current_guesses == 1: hint_message = f"Hint: This player spent most of their seasons with **{session['hints']['team']}**."
     return jsonify({'message': hint_message, 'guesses_left': current_guesses, 'is_last_guess': current_guesses == 1})
 
 @app.route('/give_up', methods=['POST'])
@@ -232,4 +232,3 @@ if __name__ == '__main__':
     if not os.path.exists('templates'):
         os.makedirs('templates')
     app.run(debug=True, port=5000)
-
