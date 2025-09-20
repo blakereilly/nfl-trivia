@@ -180,6 +180,7 @@
             padding: 30px;
             width: 90%; max-width: 500px; border-radius: 16px; position: relative; color: white;
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            text-align: center;
         }
         .close-button {
             color: #aaa; position: absolute; top: 10px; right: 15px;
@@ -216,6 +217,17 @@
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(15px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+        
+        #share-grid {
+            font-size: 2rem;
+            margin: 20px 0;
+            letter-spacing: 5px;
+        }
+        .share-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
         }
 
         @media (max-width: 768px) {
@@ -275,6 +287,19 @@
             </div>
         </div>
 
+        <div id="shareModal" class="modal">
+            <div class="modal-content">
+                <span id="close-share-button" class="close-button">&times;</span>
+                <h2 id="share-title">Results</h2>
+                <p id="share-date"></p>
+                <div id="share-grid"></div>
+                <div class="share-buttons">
+                    <button id="play-again-button">Play Again</button>
+                    <button id="copy-results-button" class="hint-button">Copy Results</button>
+                </div>
+            </div>
+        </div>
+
         <p id="copyright-notice">ReillyLabs &copy; 2025</p>
 
         <p id="data-source">
@@ -297,6 +322,14 @@
         const gameControls = document.querySelector('.game-controls');
         const tableContainer = document.querySelector('.table-container');
         const guessesLeftDisplay = document.getElementById('guesses-left-display');
+        const shareModal = document.getElementById('shareModal');
+        const closeShareButton = document.getElementById('close-share-button');
+        const shareTitle = document.getElementById('share-title');
+        const shareDate = document.getElementById('share-date');
+        const shareGrid = document.getElementById('share-grid');
+        const copyResultsButton = document.getElementById('copy-results-button');
+        const playAgainButton = document.getElementById('play-again-button');
+
 
         const columnMap = {
             "Year": "Yr", "G": "Games", "PPR": "PPR Pts", "PPR_Rank_by_Pos": "PPR Rank",
@@ -304,6 +337,7 @@
             "RushYds": "Rush Yd", "RushTD": "Rush TD",
         };
         let debounceTimeout;
+        let shareableText = '';
 
         document.addEventListener('DOMContentLoaded', startGame);
         guessButton.addEventListener('click', submitGuess);
@@ -315,6 +349,13 @@
                 rulesModal.classList.remove('active');
             }
         });
+        closeShareButton.addEventListener('click', () => shareModal.classList.remove('active'));
+        playAgainButton.addEventListener('click', () => {
+            shareModal.classList.remove('active');
+            startGame();
+        });
+        copyResultsButton.addEventListener('click', copyResultsToClipboard);
+
         guessInput.addEventListener("input", debounce(handleGuessInput, 300));
         guessInput.addEventListener("keydown", function(event) {
             if (event.key === "Enter") {
@@ -434,7 +475,7 @@
             updateFeedbackAndGuesses(data);
 
             if (data.result === 'correct' || data.result === 'out_of_guesses') {
-                endGame();
+                endGame(data.result, data.guesses_taken);
             }
         }
         
@@ -463,7 +504,7 @@
             });
             const data = await response.json();
             updateFeedbackAndGuesses(data);
-            endGame();
+            endGame(data.result, data.guesses_taken);
         }
 
         function updateFeedbackAndGuesses(data) {
@@ -490,11 +531,59 @@
             }
         }
         
-        function endGame() {
+        function endGame(result, guessesTaken) {
             guessInput.disabled = true;
             guessButton.disabled = true;
             hintButton.disabled = true;
+            showShareModal(result, guessesTaken);
         }
+
+        function showShareModal(result, guessesTaken) {
+            const today = new Date();
+            const dateString = `${today.getMonth() + 1}/${today.getDate()}/${today.getFullYear()}`;
+            shareDate.textContent = dateString;
+
+            let grid = '';
+            let resultText = '';
+
+            if (result === 'correct') {
+                shareTitle.textContent = 'You got it!';
+                resultText = `FumbLe ${dateString}\n🏈 ${guessesTaken}/4`;
+                for (let i = 0; i < 4; i++) {
+                    grid += (i < guessesTaken - 1) ? '⬜' : '🟩';
+                    if (i < guessesTaken - 1) grid = '⬜' + grid.slice(1);
+                    else grid = grid.slice(0,i) + '🟩' + grid.slice(i+1);
+                }
+                grid = '⬜'.repeat(guessesTaken - 1) + '🟩' + '⬜'.repeat(4-guessesTaken)
+            } else {
+                shareTitle.textContent = 'Nice try!';
+                resultText = `FumbLe ${dateString}\n🏈 X/4`;
+                grid = '🟥🟥🟥🟥';
+            }
+
+            shareGrid.textContent = grid;
+            shareableText = `${resultText}\n${grid}`;
+            
+            shareModal.classList.add('active');
+        }
+
+        function copyResultsToClipboard() {
+            const textArea = document.createElement('textarea');
+            textArea.value = shareableText;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                copyResultsButton.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyResultsButton.textContent = 'Copy Results';
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+            }
+            document.body.removeChild(textArea);
+        }
+
 
         function debounce(func, delay) {
             return function(...args) {
