@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
+        /* (styles unchanged from your version) */
         * { box-sizing: border-box; }
         html, body {
             margin: 0; padding: 0; width: 100%;
@@ -581,13 +582,21 @@
                 desiredOrder.forEach(headerText => {
                     if (Object.keys(stats[0]).includes(headerText)) {
                         const td = document.createElement("td");
-                        const value = statRow[headerText] != null ? statRow[headerText] : 'N/A';
+                        // --- robust null/NaN handling ---
+                        let value = statRow[headerText];
+                        if (value === null || value === undefined || (typeof value === 'number' && Number.isNaN(value))) {
+                            value = 'N/A';
+                        }
                         td.textContent = value;
-                        if (headerText === 'PPR_Rank_by_Pos' && !isNaN(value)) {
-                            const rank = parseInt(value, 10);
-                            if (rank <= 12) td.classList.add('highlight-green');
-                            else if (rank <= 24) td.classList.add('highlight-yellow');
-                            else td.classList.add('highlight-red');
+                        if (headerText === 'PPR_Rank_by_Pos') {
+                            // try to parse rank safely
+                            const rankNum = Number(value);
+                            if (!Number.isNaN(rankNum)) {
+                                const rank = parseInt(rankNum, 10);
+                                if (rank <= 12) td.classList.add('highlight-green');
+                                else if (rank <= 24) td.classList.add('highlight-yellow');
+                                else td.classList.add('highlight-red');
+                            }
                         }
                         row.appendChild(td);
                     }
@@ -678,7 +687,7 @@
                         allElements.guessInput.value = player;
                         allElements.suggestionsDiv.style.display = 'none';
                     });
-                    suggestionsDiv.appendChild(suggestion);
+                    allElements.suggestionsDiv.appendChild(suggestion);
                 });
                 allElements.suggestionsDiv.style.display = 'block';
             } else {
