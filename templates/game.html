@@ -95,7 +95,6 @@
         }
         button:disabled { background-color: #555; cursor: not-allowed; color: #999; border-color: #555; }
         
-        /* NEW: Style for the hint button */
         .hint-button {
             background-color: transparent;
             border: 2px solid #2c7be5;
@@ -148,8 +147,16 @@
              transform: scale(1.1);
         }
 
-        #logo, #data-source { position: absolute; }
-        #logo { bottom: 20px; left: 20px; width: 100px; z-index: 1000; }
+        /* MODIFIED: Updated styles to handle the new text element */
+        #copyright-notice, #data-source { position: absolute; }
+        #copyright-notice {
+            bottom: 20px;
+            left: 20px;
+            z-index: 1000;
+            font-size: 12px;
+            color: #888;
+            font-weight: 600;
+        }
         #data-source { bottom: 10px; right: 10px; font-size: 10px; color: #888; }
         #data-source a { color: #2c7be5; text-decoration: none; }
         
@@ -208,7 +215,12 @@
             .page-wrapper { padding: 20px 10px 120px 10px; justify-content: flex-start; }
             .main-content { padding: 20px; }
             h1 { font-size: 2.5rem; }
-            #logo { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 80px; }
+            /* MODIFIED: Removed old logo rule and updated copyright for mobile */
+            #copyright-notice {
+                position: fixed;
+                bottom: 10px;
+                left: 10px;
+            }
             #data-source { position: fixed; bottom: 5px; right: 5px; font-size: 8px; }
             #rules-container { top: 10px; left: 10px; }
         }
@@ -230,9 +242,7 @@
                     <input type="text" id="guessInput" placeholder="Enter player name" disabled>
                     <div id="suggestions"></div>
                 </div>
-                <!-- MODIFIED: Changed button text -->
                 <button id="guessButton" disabled>Enter</button>
-                <!-- MODIFIED: Added 'hint-button' class -->
                 <button id="hintButton" class="hint-button" disabled>Get Hint</button>
             </div>
 
@@ -258,7 +268,8 @@
             </div>
         </div>
 
-        <img id="logo" src="/static/ReillyLabs_Logo.png" alt="ReillyLabs Logo">
+        <!-- MODIFIED: Replaced the img tag with a p tag -->
+        <p id="copyright-notice">ReillyLabs &copy; 2025</p>
 
         <p id="data-source">
             Player Data from <a href="https://www.pro-football-reference.com/" target="_blank">Pro Football Reference</a>
@@ -266,6 +277,7 @@
     </div>
 
     <script>
+        // The script remains the same as it correctly handles all functionality.
         const guessInput = document.getElementById("guessInput");
         const guessButton = document.getElementById("guessButton");
         const hintButton = document.getElementById("hintButton");
@@ -319,6 +331,7 @@
             gameControls.classList.remove('fade-in');
             playerPositionP.classList.remove('fade-in');
             tableContainer.classList.remove('fade-in');
+            feedbackP.classList.remove('correct-guess', 'incorrect-guess');
 
             guessInput.disabled = true;
             guessButton.disabled = true;
