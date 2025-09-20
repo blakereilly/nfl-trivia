@@ -5,7 +5,7 @@ from flask import Flask, jsonify, request, session, render_template
 from datetime import date
 
 app = Flask(__name__)
-app.secret_key = 'your_super_secret_key'
+app.secret_key = 'your_super_secret_key'  # Corrected syntax on this line
 
 # --- Data & Game Configuration ---
 base_dir = os.path.join(os.path.dirname(__file__), 'stats')
@@ -119,7 +119,6 @@ def get_most_frequent_with_tiebreaker(df, column):
                 most_recent_year, most_recent_value = most_recent_season_for_value, value
         return most_recent_value
 
-# --- Helper to set up a game with a given player name ---
 def setup_player_game(player_name):
     player_history_df = eligible_players_prefiltered[eligible_players_prefiltered['Player'] == player_name].copy()
     player_history_df = player_history_df.sort_values(by='Year')
@@ -129,7 +128,7 @@ def setup_player_game(player_name):
     team_details = team_info.get(most_frequent_team, {})
     consistent_conference, consistent_division = team_details.get('conf', 'N/A'), team_details.get('div', 'N/A')
     selected_player_position = player_history_df.iloc[0]['FantPos']
-    session.clear() # Clear any previous session data
+    session.clear() 
     session['correct_player_name'] = player_name.lower()
     session['guesses_remaining'] = 4
     session['correct_last_name'] = player_name.lower().split()[-1]
@@ -219,7 +218,7 @@ def get_hint():
     hint_message = ""
     if current_guesses == 3: hint_message = f"Hint: This player spent most of their seasons in the **{hints['conference']}**."
     elif current_guesses == 2: hint_message = f"Hint: This player spent most of their seasons in the **{hints['conference']} {session['hints']['division']}**."
-    elif current_guesses == 1: hint_message = f"Hint: This player spent most of their seasons with **{session['hints']['team']}**."
+    elif current_guesses == 1: hint_message = f"Hint: This player spent most of their seasons with **{hints['team']}**."
     return jsonify({'message': hint_message, 'guesses_left': current_guesses, 'is_last_guess': current_guesses == 1})
 
 @app.route('/give_up', methods=['POST'])
@@ -233,108 +232,4 @@ if __name__ == '__main__':
     if not os.path.exists('templates'):
         os.makedirs('templates')
     app.run(debug=True, port=5000)
-```
-
-### 2. `landing.html` (Updated with Practice Mode)
-
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FumbLe - The Daily NFL Player Guessing Game</title>
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-        html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            font-family: Arial, sans-serif;
-            background: #10141a;
-            color: #f5f5f5;
-        }
-        .container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-        h1 {
-            font-size: 4rem;
-            margin-bottom: 20px;
-        }
-        .rules-section {
-            background-color: #1a1e24;
-            border-radius: 8px;
-            padding: 20px;
-            max-width: 600px;
-            margin-bottom: 30px;
-            border: 1px solid #444;
-        }
-        .rules-section h2 {
-            margin-top: 0;
-            color: #2c7be5;
-        }
-        .rules-section p {
-            line-height: 1.6;
-            text-align: left;
-        }
-        .button-container {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            align-items: center;
-        }
-        .play-button {
-            padding: 15px 30px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: white;
-            background-color: #2c7be5;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            width: 300px;
-            max-width: 100%;
-        }
-        .play-button:hover {
-            background-color: #1a5bb8;
-        }
-        .random-button {
-            background-color: transparent;
-            border: 2px solid #2c7be5;
-            color: #2c7be5;
-        }
-        .random-button:hover {
-            background-color: #2c7be5;
-            color: white;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>FumbLe</h1>
-        <div class="rules-section">
-            <h2>How to Play</h2>
-            <p>1. A player's position and career stats will be displayed. Your goal is to guess the NFL player's name.</p>
-            <p>2. You get 4 guesses. If you are stuck, you can use the "Get Hint" button, but it will take away one of your guesses.</p>
-            <p>3. You can guess a player by their full name or last name only. Entries are not case sensitive.</p>
-            <p>4. Guess correctly or run out of guesses to end the game.</p>
-        </div>
-        <div class="button-container">
-            <a href="/game" class="play-button">Play Daily Game</a>
-            <a href="/random" class="play-button random-button">Play Random Game (Practice)</a>
-        </div>
-    </div>
-</body>
-</html>
 
