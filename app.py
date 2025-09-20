@@ -129,6 +129,7 @@ def setup_player_game(player_name):
     team_details = team_info.get(most_frequent_team, {})
     consistent_conference, consistent_division = team_details.get('conf', 'N/A'), team_details.get('div', 'N/A')
     selected_player_position = player_history_df.iloc[0]['FantPos']
+    session.clear() # Clear any previous session data
     session['correct_player_name'] = player_name.lower()
     session['guesses_remaining'] = 4
     session['correct_last_name'] = player_name.lower().split()[-1]
@@ -144,7 +145,6 @@ def home():
 def game_page():
     return render_template('game.html')
 
-# NEW: Route for random games (testing)
 @app.route('/random')
 def random_game_page():
     return render_template('game.html')
@@ -159,18 +159,22 @@ def start_game():
     selected_player_name = daily_player_list[player_index]
     return jsonify(setup_player_game(selected_player_name))
 
-# NEW: Route to start a random game for testing
 @app.route('/start_random_game', methods=['POST'])
 def start_random_game():
     selected_player_name = random.choice(eligible_players_prefiltered['Player'].unique().tolist())
     return jsonify(setup_player_game(selected_player_name))
 
-# (All other routes: /suggest, /guess, /hint, /give_up remain the same)
 @app.route('/suggest_players', methods=['POST'])
 def suggest_players():
     data = request.get_json()
     query = data.get('query', '').strip().lower()
-    position = session.get('correct_player', {}).get('FantPos')
+    if 'correct_player_name' not in session:
+        return jsonify([])
+    player_info = eligible_players_prefiltered[eligible_players_prefiltered['Player'].str.lower() == session['correct_player_name']]
+    if player_info.empty:
+        return jsonify([])
+    position = player_info.iloc[0]['FantPos']
+    
     if not query or len(query) < 2 or not position:
         return jsonify([])
     filtered_df = eligible_players_prefiltered[
@@ -214,8 +218,8 @@ def get_hint():
     hints = session.get('hints')
     hint_message = ""
     if current_guesses == 3: hint_message = f"Hint: This player spent most of their seasons in the **{hints['conference']}**."
-    elif current_guesses == 2: hint_message = f"Hint: This player spent most of their seasons in the **{hints['conference']} {hints['division']}**."
-    elif current_guesses == 1: hint_message = f"Hint: This player spent most of their seasons with **{hints['team']}**."
+    elif current_guesses == 2: hint_message = f"Hint: This player spent most of their seasons in the **{hints['conference']} {session['hints']['division']}**."
+    elif current_guesses == 1: hint_message = f"Hint: This player spent most of their seasons with **{session['hints']['team']}**."
     return jsonify({'message': hint_message, 'guesses_left': current_guesses, 'is_last_guess': current_guesses == 1})
 
 @app.route('/give_up', methods=['POST'])
@@ -229,4 +233,3 @@ if __name__ == '__main__':
     if not os.path.exists('templates'):
         os.makedirs('templates')
     app.run(debug=True, port=5000)
-
