@@ -49,10 +49,8 @@ else:
     for year in years:
         file_name = f'player_stats{year}.csv'
         file_path = os.path.join(base_dir, file_name)
-
         if not os.path.exists(file_path) or not os.access(file_path, os.R_OK):
             continue
-
         try:
             df = pd.read_csv(file_path)
             if 'Player' not in df.columns:
@@ -64,56 +62,39 @@ else:
         except Exception as e:
             print(f"Error loading or processing {file_name}: {e}")
             continue
-
     if not all_dfs:
-        print("Error: No data files were found or they are missing the 'Player' column. Exiting.")
+        print("Error: No data files found. Exiting.")
         exit()
-
     combined_df = pd.concat(all_dfs, ignore_index=True)
-
     combined_df = combined_df.rename(columns={
         'Yds': 'PassYds', 'TD': 'PassTD', 'Yds.1': 'RushYds', 'TD.1': 'RushTD',
         'Yds.2': 'RecYds', 'TD.2': 'RecTD'
     })
-
     int_cols = ['G', 'PassYds', 'PassTD', 'RushYds', 'RushTD', 'Rec', 'RecYds', 'RecTD']
     float_cols = ['PPR']
-
     for col in int_cols:
         if col in combined_df.columns:
             combined_df[col] = pd.to_numeric(combined_df[col], errors='coerce').fillna(0).astype(int)
     for col in float_cols:
         if col in combined_df.columns:
             combined_df[col] = pd.to_numeric(combined_df[col], errors='coerce').fillna(0)
-
     combined_df['Player'] = combined_df['Player'].str.replace(r'[^\w\s-]*$', '', regex=True)
-    
     combined_df['Conference'] = combined_df['Tm'].apply(lambda x: team_info.get(x, {}).get('conf', 'N/A'))
     combined_df['Division'] = combined_df['Tm'].apply(lambda x: team_info.get(x, {}).get('div', 'N/A'))
-    
     combined_df['PPR_Rank'] = combined_df.groupby('Year')['PPR'].rank(ascending=False, method='dense').astype(int)
     combined_df['PPR_Rank_by_Pos'] = combined_df.groupby(['Year', 'FantPos'])['PPR'].rank(ascending=False, method='dense').astype(int)
-
     combined_df = combined_df[combined_df['FantPos'] != 'FB'].copy()
-
     combined_df.to_csv(processed_data_path, index=False)
-    print("Data processing complete and saved to combined_stats.csv.")
+    print("Data processing complete and saved.")
 
 
-# --- Helper functions ---
 def get_most_frequent_with_tiebreaker(df, column):
-    if df.empty:
-        return "N/A"
-    
+    if df.empty: return "N/A"
     counts = df[column].value_counts()
-    if counts.empty:
-        return "N/A"
-        
+    if counts.empty: return "N/A"
     max_seasons = counts.max()
     tied_values = counts[counts == max_seasons].index.tolist()
-
-    if len(tied_values) == 1:
-        return tied_values[0]
+    if len(tied_values) == 1: return tied_values[0]
     else:
         most_recent_year = 0
         most_recent_value = "N/A"
@@ -124,11 +105,9 @@ def get_most_frequent_with_tiebreaker(df, column):
                 most_recent_value = value
         return most_recent_value
 
-# --- Pre-filter all eligible players at app startup ---
 if 'Player' not in combined_df.columns:
-    print("Fatal Error: 'Player' column is missing from the combined dataset. Cannot proceed.")
+    print("Fatal Error: 'Player' column is missing. Cannot proceed.")
     exit()
-
 player_first_year = combined_df.groupby('Player')['Year'].min().reset_index()
 player_first_year.rename(columns={'Year': 'FirstYear'}, inplace=True)
 eligible_players_df = pd.merge(combined_df, player_first_year, on='Player')
@@ -138,19 +117,15 @@ valid_players_24 = players_with_2_top_24_seasons[players_with_2_top_24_seasons >
 top_12_seasons = eligible_players_df[eligible_players_df['PPR_Rank_by_Pos'] <= 12]
 valid_players_12 = top_12_seasons['Player'].unique().tolist()
 eligible_players_list = list(set(valid_players_24 + valid_players_12))
-
 eligible_players_prefiltered = eligible_players_df[
     (eligible_players_df['Player'].isin(eligible_players_list)) &
     (eligible_players_df['FirstYear'] >= EARLIEST_YEAR) &
     (eligible_players_df['Year'] >= EARLIEST_YEAR)
 ].copy()
-
 if eligible_players_prefiltered.empty:
-    print(f"Warning: No eligible players found for starting year {EARLIEST_YEAR}. The game will not work.")
-
+    print(f"Warning: No eligible players found for starting year {EARLIEST_YEAR}.")
 print("All eligible players pre-filtered and stored!")
 
-# --- Flask Routes ---
 @app.route('/')
 def home():
     return render_template('landing.html')
@@ -162,81 +137,52 @@ def game_page():
 @app.route('/start_game', methods=['POST'])
 def start_game():
     players_for_year = eligible_players_prefiltered.copy()
-
     if players_for_year.empty:
         return jsonify({"error": "No eligible players found for the configured year range."})
-
     selected_player_name = random.choice(players_for_year['Player'].unique().tolist())
-    
     player_history_df = players_for_year[players_for_year['Player'] == selected_player_name].copy()
     player_history_df = player_history_df.sort_values(by='Year')
-
-    # --- MODIFIED: Hint logic is now consistent ---
-    # 1. Find the primary team first.
     most_frequent_team = get_most_frequent_with_tiebreaker(player_history_df, 'Tm')
-    
-    # 2. Derive the conference and division from that team.
     team_details = team_info.get(most_frequent_team, {})
     consistent_conference = team_details.get('conf', 'N/A')
     consistent_division = team_details.get('div', 'N/A')
-    # --- END MODIFICATION ---
-
     selected_player_position = player_history_df.iloc[0]['FantPos']
-
-    all_columns = ['Year', 'FantPos', 'G', 'PPR', 'PPR_Rank_by_Pos', 
-                   'PassYds', 'PassTD', 'RushYds', 'RushTD', 'Rec', 'RecYds', 'RecTD']
-
+    all_columns = ['Year', 'FantPos', 'G', 'PPR', 'PPR_Rank_by_Pos', 'PassYds', 'PassTD', 'RushYds', 'RushTD', 'Rec', 'RecYds', 'RecTD']
     columns_to_show = [col for col in all_columns if col in player_history_df.columns]
-    
     display_df = player_history_df[columns_to_show]
     stats_json = display_df.to_dict('records')
-
     session['correct_player_name'] = selected_player_name.lower()
     session['correct_player'] = player_history_df.iloc[0].to_dict()
     session['guesses_remaining'] = 4
     session['correct_last_name'] = selected_player_name.lower().split()[-1]
-    
-    # MODIFIED: Store the new, consistent hints in the session.
     session['hints'] = {
         'conference': consistent_conference,
         'division': consistent_division,
         'team': most_frequent_team
     }
-    
-    return jsonify({
-        'position': selected_player_position,
-        'stats': stats_json
-    })
+    return jsonify({'position': selected_player_position, 'stats': stats_json})
 
 @app.route('/suggest_players', methods=['POST'])
 def suggest_players():
     data = request.get_json()
     query = data.get('query', '').strip().lower()
-    
     position = session.get('correct_player', {}).get('FantPos')
-
     if not query or len(query) < 2 or not position:
         return jsonify([])
-
     filtered_df = eligible_players_prefiltered[
         (eligible_players_prefiltered['FantPos'] == position) &
         (eligible_players_prefiltered['Player'].str.lower().str.contains(query, na=False))
     ]
-    
     unique_players = filtered_df['Player'].unique().tolist()
-    
     return jsonify(unique_players[:10])
 
 @app.route('/guess', methods=['POST'])
 def handle_guess():
     guess = request.get_json().get('guess', '').strip().lower()
-
     if 'guesses_remaining' not in session:
         return jsonify({"error": "Game not started. Please refresh."}), 400
-
     correct_last_name = session['correct_last_name']
     guess_last_name = guess.split()[-1].lower()
-
     if guess == session['correct_player_name'] or guess_last_name == correct_last_name:
         correct_name = session['correct_player_name'].title()
         session.pop('guesses_remaining', None)
@@ -244,7 +190,6 @@ def handle_guess():
     else:
         session['guesses_remaining'] -= 1
         tries_left = session['guesses_remaining']
-
         if tries_left > 0:
             if session['guesses_remaining'] == 3:
                 hint = f"Hint: This player spent most of their seasons in the **{session['hints']['conference']}**."
@@ -254,7 +199,7 @@ def handle_guess():
                 hint = f"Hint: This player spent most of their seasons with **{session['hints']['team']}**."
             else:
                 hint = ""
-            return jsonify({'result': 'incorrect', 'message': f"❌ Incorrect guess. You have {tries_left} guesses left.", 'hint': hint})
+            return jsonify({'result': 'incorrect', 'message': "❌ Incorrect guess.", 'hint': hint, 'guesses_left': tries_left})
         else:
             final_message = f"❌ Out of guesses! The correct player was **{session['correct_player_name'].title()}**."
             session.pop('guesses_remaining', None)
@@ -263,28 +208,25 @@ def handle_guess():
 @app.route('/hint', methods=['POST'])
 def get_hint():
     guesses_left = session.get('guesses_remaining')
-
     if guesses_left is None or guesses_left <= 0:
         return jsonify({'message': 'You have no guesses left to get a hint!'}), 400
-
     session['guesses_remaining'] -= 1
     
     hints = session.get('hints')
     if session['guesses_remaining'] == 3:
-        hint_message = f"Hint: This player spent most of their seasons in the **{hints['conference']}**. You have {session['guesses_remaining']} guesses left."
+        hint_message = f"Hint: This player spent most of their seasons in the **{hints['conference']}**."
     elif session['guesses_remaining'] == 2:
-        hint_message = f"Hint: This player spent most of their seasons in the **{hints['conference']} {hints['division']}**. You have {session['guesses_remaining']} guesses left."
+        hint_message = f"Hint: This player spent most of their seasons in the **{hints['conference']} {hints['division']}**."
     elif session['guesses_remaining'] == 1:
-        hint_message = f"Hint: This player spent most of their seasons with **{hints['team']}**. You have {session['guesses_remaining']} guesses left."
+        hint_message = f"Hint: This player spent most of their seasons with **{hints['team']}**."
     else:
         final_message = f"❌ Out of guesses! The correct player was **{session['correct_player_name'].title()}**."
         session.pop('guesses_remaining', None)
         return jsonify({'result': 'out_of_guesses', 'message': final_message})
-
-    return jsonify({'message': hint_message})
+    return jsonify({'message': hint_message, 'guesses_left': session['guesses_remaining']})
 
 if __name__ == '__main__':
     if not os.path.exists('templates'):
         os.makedirs('templates')
-    app.run(debug=True, port=5000)
+    #app.run(debug=True, port=5000)
 
