@@ -124,7 +124,6 @@
         #feedback.correct-guess { color: #4CAF50; }
         #feedback.incorrect-guess { color: #F44336; }
 
-        /* NEW: Styles for the separate guesses left display */
         #guesses-left-display {
             font-size: 1.1rem;
             color: #FFC107;
@@ -254,7 +253,6 @@
             </div>
 
             <p id="feedback"></p>
-            <!-- NEW: Separate element for showing guesses left -->
             <p id="guesses-left-display" style="display: none;"></p> 
             <p id="playerPosition" style="visibility: hidden;"></p>
 
@@ -298,7 +296,6 @@
         const loader = document.getElementById('loader');
         const gameControls = document.querySelector('.game-controls');
         const tableContainer = document.querySelector('.table-container');
-        // NEW: Select the new element
         const guessesLeftDisplay = document.getElementById('guesses-left-display');
 
         const columnMap = {
@@ -310,7 +307,7 @@
 
         document.addEventListener('DOMContentLoaded', startGame);
         guessButton.addEventListener('click', submitGuess);
-        hintButton.addEventListener('click', getHint);
+        hintButton.addEventListener('click', handleHintOrGiveUp);
         rulesButton.addEventListener('click', () => rulesModal.classList.add('active'));
         closeRulesButton.addEventListener('click', () => rulesModal.classList.remove('active'));
         rulesModal.addEventListener('click', (event) => {
@@ -341,8 +338,8 @@
             playerPositionP.classList.remove('fade-in');
             tableContainer.classList.remove('fade-in');
             feedbackP.classList.remove('correct-guess', 'incorrect-guess');
-            // MODIFIED: Hide the guesses display on new game
             guessesLeftDisplay.style.display = 'none';
+            hintButton.textContent = 'Get Hint';
 
             guessInput.disabled = true;
             guessButton.disabled = true;
@@ -355,31 +352,25 @@
                     body: JSON.stringify({}) 
                 });
                 const data = await response.json();
-
                 loader.style.display = 'none';
-
                 if (data.error) {
                     feedbackP.textContent = data.error;
                     return;
                 }
-
                 playerPositionP.textContent = `Position: ${data.position}`;
                 renderTable(data.stats);
                 feedbackP.textContent = "Guess the player based on their stats:";
-                
                 guessInput.value = "";
                 guessInput.disabled = false;
                 guessButton.disabled = false;
                 hintButton.disabled = false;
                 statsTable.style.display = 'table';
-
                 gameControls.style.visibility = 'visible';
                 playerPositionP.style.visibility = 'visible';
                 tableContainer.style.visibility = 'visible';
                 gameControls.classList.add('fade-in');
                 playerPositionP.classList.add('fade-in');
                 tableContainer.classList.add('fade-in');
-
             } catch (error) {
                 loader.style.display = 'none';
                 feedbackP.textContent = "Failed to start the game. Please try again.";
@@ -432,9 +423,7 @@
             const guess = guessInput.value.trim();
             if (!guess) return;
             guessInput.value = '';
-
             feedbackP.classList.remove('correct-guess', 'incorrect-guess');
-
             const response = await fetch('/guess', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -442,7 +431,42 @@
             });
             const data = await response.json();
             
-            // MODIFIED: Handle message, hints, and guesses separately
+            updateFeedbackAndGuesses(data);
+
+            if (data.result === 'correct' || data.result === 'out_of_guesses') {
+                endGame();
+            }
+        }
+        
+        function handleHintOrGiveUp() {
+            if (hintButton.textContent === 'Give Up?') {
+                giveUp();
+            } else {
+                getHint();
+            }
+        }
+
+        async function getHint() {
+            feedbackP.classList.remove('correct-guess', 'incorrect-guess');
+            const response = await fetch('/hint', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const data = await response.json();
+            updateFeedbackAndGuesses(data);
+        }
+
+        async function giveUp() {
+            const response = await fetch('/give_up', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const data = await response.json();
+            updateFeedbackAndGuesses(data);
+            endGame();
+        }
+
+        function updateFeedbackAndGuesses(data) {
             feedbackP.innerHTML = data.message;
             if (data.hint) {
                 feedbackP.innerHTML += `<br><br>${data.hint}`;
@@ -461,29 +485,15 @@
                 feedbackP.classList.add('incorrect-guess');
             }
 
-            if (data.result === 'correct' || data.result === 'out_of_guesses') {
-                guessInput.disabled = true;
-                guessButton.disabled = true;
-                hintButton.disabled = true;
+            if (data.is_last_guess) {
+                hintButton.textContent = 'Give Up?';
             }
         }
         
-        async function getHint() {
-            feedbackP.classList.remove('correct-guess', 'incorrect-guess');
-            const response = await fetch('/hint', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
-            });
-            const data = await response.json();
-            
-            // MODIFIED: Handle message and guesses separately
-            feedbackP.innerHTML = data.message;
-            feedbackP.classList.add('incorrect-guess');
-
-            if (data.guesses_left !== undefined) {
-                guessesLeftDisplay.textContent = `Guesses Left: ${data.guesses_left}`;
-                guessesLeftDisplay.style.display = 'block';
-            }
+        function endGame() {
+            guessInput.disabled = true;
+            guessButton.disabled = true;
+            hintButton.disabled = true;
         }
 
         function debounce(func, delay) {
