@@ -5,7 +5,8 @@ from flask import Flask, jsonify, request, session, render_template
 from datetime import date
 
 app = Flask(__name__)
-app.secret_key = 'your_super_secret_key'  # Corrected syntax on this line
+# Use environment variable for security, fallback for local dev
+app.secret_key = os.environ.get("SECRET_KEY", "dev_key_for_local")
 
 # --- Data & Game Configuration ---
 base_dir = os.path.join(os.path.dirname(__file__), 'stats')
@@ -133,7 +134,11 @@ def setup_player_game(player_name):
     session['guesses_remaining'] = 4
     session['correct_last_name'] = player_name.lower().split()[-1]
     session['hints'] = {'conference': consistent_conference, 'division': consistent_division, 'team': most_frequent_team}
+    
+    # ✅ Replace NaN with None so JSON is valid
+    player_history_df = player_history_df.where(pd.notnull(player_history_df), None)
     stats_json = player_history_df.to_dict('records')
+    
     return {'position': selected_player_position, 'stats': stats_json}
 
 @app.route('/')
