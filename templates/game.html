@@ -421,6 +421,7 @@
             state.guesses.forEach(guessData => {
                 const p = document.createElement('p');
                 p.textContent = `Guessed: ${guessData.guess || 'Hint Used'}`;
+                p.style.opacity = '0.5';
                 allElements.feedbackP.parentNode.insertBefore(p, allElements.feedbackP);
             });
             
@@ -490,6 +491,7 @@
                 if(state){
                     state.gameOver = true;
                     state.result = 'out_of_guesses';
+                    state.guessesRemaining = 0;
                     saveState(state);
                 }
             }
@@ -499,7 +501,7 @@
 
         // --- UI Helper Functions ---
         function updateFeedbackAndGuesses(data) {
-            allElements.feedbackP.innerHTML = data.message;
+            allElements.feedbackP.innerHTML = data.message || "";
             if (data.hint) {
                 allElements.feedbackP.innerHTML += `<br><br>${data.hint}`;
             }
@@ -511,7 +513,7 @@
             }
             if (data.result === 'correct') {
                 allElements.feedbackP.classList.add('correct-guess');
-            } else if (data.message) { // Only add incorrect class if there's a message
+            } else if (data.message) {
                 allElements.feedbackP.classList.add('incorrect-guess');
             }
             if (data.is_last_guess) {
