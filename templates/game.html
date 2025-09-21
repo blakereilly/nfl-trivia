@@ -49,16 +49,15 @@
             font-size: 1.5rem; color: #00f2ea; margin: 10px 0 20px 0;
             font-weight: 600;
         }
-        /* --- ADDED THIS NEW STYLE --- */
         .position-badge {
             display: inline-block;
-            background-color: #2c7be5; /* Blue background */
-            color: #ffffff; /* White text */
-            padding: 5px 12px; /* Vertical and horizontal padding */
-            border-radius: 12px; /* Rounded corners */
-            font-size: 1.4rem; /* Slightly smaller font to fit well */
-            margin-left: 8px; /* Space between "Position:" and the badge */
-            vertical-align: middle; /* Aligns badge with the text */
+            background-color: #2c7be5;
+            color: #ffffff;
+            padding: 5px 12px;
+            border-radius: 12px;
+            font-size: 1.4rem;
+            margin-left: 8px;
+            vertical-align: middle;
         }
         .game-controls {
             display: flex; flex-direction: column; align-items: center; margin-bottom: 15px; width: 100%; max-width: 350px;
@@ -77,9 +76,7 @@
             border-bottom: 1px solid #2a2e34;
             padding: 14px; white-space: nowrap; text-align: center;
         }
-        #statsTable th {
-            background-color: #2c7be5; color: white; font-weight: 600;
-        }
+        #statsTable th { background-color: #2c7be5; color: white; font-weight: 600; }
         #statsTable th:first-child { border-radius: 12px 0 0 0; }
         #statsTable th:last-child { border-radius: 0 12px 0 0; }
         #statsTable tr:last-child td:first-child { border-radius: 0 0 0 12px; }
@@ -107,165 +104,105 @@
         button:disabled { background-color: #555; cursor: not-allowed; color: #999; border-color: #555; }
         
         .hint-button {
-            background-color: transparent;
-            border: 2px solid #2c7be5;
-            color: #2c7be5;
+            background-color: transparent; border: 2px solid #2c7be5; color: #2c7be5;
         }
-        .hint-button:hover:not(:disabled) {
-            background-color: #2c7be5;
-            color: white;
-        }
-
-        input[type="text"] {
-            background-color: #2a2e34;
-            color: #f5f5f5;
-            border: 1px solid #444;
-        }
-        input[type="text"]:focus {
-            outline: none;
-            border-color: #00f2ea;
-            box-shadow: 0 0 8px rgba(0, 242, 234, 0.5);
-        }
-
-        #feedback { 
-            margin-top: 15px; font-size: 18px; min-height: 25px;
-            font-weight: 600;
-            transition: color 0.4s ease-in-out;
-        }
+        .hint-button:hover:not(:disabled) { background-color: #2c7be5; color: white; }
+        input[type="text"] { background-color: #2a2e34; color: #f5f5f5; border: 1px solid #444; }
+        input[type="text"]:focus { outline: none; border-color: #00f2ea; box-shadow: 0 0 8px rgba(0, 242, 234, 0.5); }
+        #feedback { margin-top: 15px; font-size: 18px; min-height: 25px; font-weight: 600; transition: color 0.4s ease-in-out; }
         #feedback.correct-guess { color: #4CAF50; }
         #feedback.incorrect-guess { color: #F44336; }
+        #guesses-left-display { font-size: 1.1rem; color: #FFC107; font-weight: 600; margin-top: 5px; min-height: 20px; }
 
-        #guesses-left-display {
-            font-size: 1.1rem;
-            color: #FFC107;
-            font-weight: 600;
-            margin-top: 5px;
-            min-height: 20px;
-        }
+        /* --- UI Buttons in Corners --- */
+        #rules-container, #share-link-container { position: absolute; top: 15px; z-index: 1000; }
+        #rules-container { left: 15px; }
+        #share-link-container { right: 15px; }
 
-        #rules-container {
-            position: absolute; top: 15px; left: 15px; z-index: 1000;
-        }
+        /* --- UPDATED RULES BUTTON STYLE --- */
         #rules-button {
-            background-color: rgba(42, 46, 52, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #f5f5f5;
-            font-weight: bold;
-            font-size: 18px;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            cursor: pointer;
-            padding: 0;
-            line-height: 40px;
-            text-align: center;
-            transition: all 0.3s ease;
+            background: none; border: none; color: #aaa;
+            font-weight: bold; font-size: 24px; cursor: pointer; padding: 5px;
+            transition: all 0.3s ease; width: auto;
         }
         #rules-button:hover {
-             background-color: rgba(44, 123, 229, 0.8);
-             transform: scale(1.1);
+            color: #fff; transform: scale(1.1);
+            background: none; box-shadow: none;
         }
 
-        #copyright-notice, #data-source { position: absolute; }
-        #copyright-notice {
-            bottom: 20px;
-            left: 20px;
-            z-index: 1000;
-            font-size: 12px;
-            color: #888;
-            font-weight: 600;
+        /* --- NEW SHARE BUTTON STYLE --- */
+        #share-link-button {
+            background: none; border: none; color: #aaa;
+            cursor: pointer; padding: 5px; width: auto;
+            transition: all 0.3s ease;
         }
+        #share-link-button:hover {
+            color: #fff; transform: scale(1.1);
+            background: transparent; box-shadow: none;
+        }
+        #share-link-button svg { vertical-align: middle; }
+
+        #copyright-notice, #data-source { position: absolute; }
+        #copyright-notice { bottom: 20px; left: 20px; z-index: 1000; font-size: 12px; color: #888; font-weight: 600; }
         #data-source { bottom: 10px; right: 10px; font-size: 10px; color: #888; }
         #data-source a { color: #2c7be5; text-decoration: none; }
         
-        .modal {
-            display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.6); 
-            backdrop-filter: blur(5px);
-            align-items: center; justify-content: center;
-        }
+        .modal { display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(5px); align-items: center; justify-content: center; }
         .modal.active { display: flex; }
-        .modal-content {
-            background: rgba(30, 35, 41, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 30px;
-            width: 90%; max-width: 500px; border-radius: 16px; position: relative; color: white;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-            text-align: center;
+        .modal-content { background: rgba(30, 35, 41, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); padding: 30px; width: 90%; max-width: 500px; border-radius: 16px; position: relative; color: white; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); text-align: center; }
+        .close-button { color: #aaa; position: absolute; top: 10px; right: 15px; font-size: 28px; font-weight: bold; cursor: pointer; }
+        
+        /* --- NEW SHARE LINK MODAL STYLES --- */
+        .share-link-input-container { display: flex; width: 100%; margin-top: 15px; }
+        #share-url-input {
+            flex-grow: 1; background-color: #1a1e24; color: #f5f5f5;
+            border: 1px solid #444; border-radius: 8px 0 0 8px;
+            padding: 10px; font-size: 14px; margin: 0;
         }
-        .close-button {
-            color: #aaa; position: absolute; top: 10px; right: 15px;
-            font-size: 28px; font-weight: bold; cursor: pointer;
+        #copy-url-button {
+            flex-shrink: 0; width: auto; border-radius: 0 8px 8px 0;
+            margin: 0; font-size: 14px; padding: 10px 15px;
         }
-        .autocomplete-container {
-            position: relative; display: inline-block; width: 100%;
-        }
-        #suggestions {
-            position: absolute; z-index: 99; background-color: #1a1e24; color: #f5f5f5;
-            border: 1px solid #444; border-top: none; width: 100%; max-height: 200px; overflow-y: auto;
-            text-align: left; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); border-radius: 0 0 8px 8px;
-            display: none;
-        }
+
+        .autocomplete-container { position: relative; display: inline-block; width: 100%; }
+        #suggestions { position: absolute; z-index: 99; background-color: #1a1e24; color: #f5f5f5; border: 1px solid #444; border-top: none; width: 100%; max-height: 200px; overflow-y: auto; text-align: left; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); border-radius: 0 0 8px 8px; display: none; }
         #suggestions div { padding: 10px; cursor: pointer; }
         #suggestions div:hover { background-color: #2c7be5; }
 
-        .loader {
-            border: 4px solid rgba(243, 243, 243, 0.3);
-            border-top: 4px solid #00f2ea;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .fade-in {
-            animation: fadeIn 0.8s ease-in-out forwards;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .loader { border: 4px solid rgba(243, 243, 243, 0.3); border-top: 4px solid #00f2ea; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .fade-in { animation: fadeIn 0.8s ease-in-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
         
-        #share-grid {
-            font-size: 2rem;
-            margin: 20px 0;
-            letter-spacing: 5px;
-        }
-        .share-buttons {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-        }
+        #share-grid { font-size: 2rem; margin: 20px 0; letter-spacing: 5px; }
+        .share-buttons { display: flex; gap: 10px; justify-content: center; }
 
         @media (max-width: 768px) {
             .page-wrapper { padding: 20px 10px 120px 10px; justify-content: flex-start; }
             .main-content { padding: 20px; }
             h1 { font-size: 2.5rem; }
-            #copyright-notice {
-                position: fixed;
-                bottom: 10px;
-                left: 10px;
-            }
+            #copyright-notice { position: fixed; bottom: 10px; left: 10px; }
             #data-source { position: fixed; bottom: 5px; right: 5px; font-size: 8px; }
-            #rules-container { top: 10px; left: 10px; }
+            #rules-container, #share-link-container { top: 10px; }
+            #rules-container { left: 10px; }
+            #share-link-container { right: 10px; }
         }
     </style>
 </head>
 <body>
     <div class="page-wrapper">
-        <div id="rules-container">
-            <button id="rules-button">?</button>
+        <div id="rules-container"><button id="rules-button">?</button></div>
+
+        <!-- NEW SHARE BUTTON -->
+        <div id="share-link-container">
+            <button id="share-link-button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+            </button>
         </div>
 
         <div class="main-content">
             <h1>FumbLe</h1>
-            
             <div id="loader" class="loader" style="display: none;"></div>
-
             <div class="game-controls" style="visibility: hidden;">
                 <div class="autocomplete-container">
                     <input type="text" id="guessInput" placeholder="Enter player name" disabled>
@@ -274,16 +211,11 @@
                 <button id="guessButton" disabled>Enter</button>
                 <button id="hintButton" class="hint-button" disabled>Get Hint</button>
             </div>
-
             <p id="feedback"></p>
             <p id="guesses-left-display" style="display: none;"></p> 
             <p id="playerPosition" style="visibility: hidden;"></p>
-
             <div class="table-container" style="visibility: hidden;">
-                <table id="statsTable">
-                    <thead></thead>
-                    <tbody></tbody>
-                </table>
+                <table id="statsTable"><thead></thead><tbody></tbody></table>
             </div>
         </div>
         
@@ -294,7 +226,7 @@
                 <p>1. An NFL player's position and career stats will be displayed. Your goal is to guess their name.</p>
                 <p>2. You get 4 guesses. If you are stuck, you can use the "Get Hint" button but it will take away one of your guesses.</p>
                 <p>3. The order of hints will be: Conference, Division, then Team.</p>
-                <p>4. Share your daily results with friends!</p>
+                <p>4. Share your results with friends!</p>
                 <p>Do you know ball?</p>
             </div>
         </div>
@@ -312,11 +244,21 @@
             </div>
         </div>
 
-        <p id="copyright-notice">ReillyLabs &copy; 2025</p>
+        <!-- NEW SHARE LINK MODAL -->
+        <div id="shareLinkModal" class="modal">
+            <div class="modal-content">
+                <span id="close-share-link-button" class="close-button">&times;</span>
+                <h2>Share FumbLe</h2>
+                <p>Share this link with your friends to challenge them!</p>
+                <div class="share-link-input-container">
+                    <input type="text" id="share-url-input" readonly>
+                    <button id="copy-url-button">Copy</button>
+                </div>
+            </div>
+        </div>
 
-        <p id="data-source">
-            Player Data from <a href="https://www.pro-football-reference.com/" target="_blank">Pro Football Reference</a>
-        </p>
+        <p id="copyright-notice">ReillyLabs &copy; 2025</p>
+        <p id="data-source">Player Data from <a href="https://www.pro-football-reference.com/" target="_blank">Pro Football Reference</a></p>
     </div>
 
     <script>
@@ -327,13 +269,15 @@
         const playerPositionP = document.getElementById("playerPosition");
         const statsTable = document.getElementById("statsTable");
         const suggestionsDiv = document.getElementById("suggestions");
-        const rulesButton = document.getElementById('rules-button');
-        const rulesModal = document.getElementById('rulesModal');
-        const closeRulesButton = document.getElementById('close-rules-button');
         const loader = document.getElementById('loader');
         const gameControls = document.querySelector('.game-controls');
         const tableContainer = document.querySelector('.table-container');
         const guessesLeftDisplay = document.getElementById('guesses-left-display');
+        
+        // Modal elements
+        const rulesButton = document.getElementById('rules-button');
+        const rulesModal = document.getElementById('rulesModal');
+        const closeRulesButton = document.getElementById('close-rules-button');
         const shareModal = document.getElementById('shareModal');
         const closeShareButton = document.getElementById('close-share-button');
         const shareTitle = document.getElementById('share-title');
@@ -342,6 +286,12 @@
         const copyResultsButton = document.getElementById('copy-results-button');
         const playAgainButton = document.getElementById('play-again-button');
 
+        // --- NEW SHARE LINK ELEMENTS ---
+        const shareLinkButton = document.getElementById('share-link-button');
+        const shareLinkModal = document.getElementById('shareLinkModal');
+        const closeShareLinkButton = document.getElementById('close-share-link-button');
+        const shareUrlInput = document.getElementById('share-url-input');
+        const copyUrlButton = document.getElementById('copy-url-button');
 
         const columnMap = {
             "Year": "Yr", "G": "Games", "PPR": "PPR Pts", "PPR_Rank_by_Pos": "PPR Rank",
@@ -356,29 +306,30 @@
         hintButton.addEventListener('click', handleHintOrGiveUp);
         rulesButton.addEventListener('click', () => rulesModal.classList.add('active'));
         closeRulesButton.addEventListener('click', () => rulesModal.classList.remove('active'));
-        rulesModal.addEventListener('click', (event) => {
-            if (event.target === rulesModal) {
-                rulesModal.classList.remove('active');
-            }
-        });
+        rulesModal.addEventListener('click', (event) => { if (event.target === rulesModal) rulesModal.classList.remove('active'); });
         closeShareButton.addEventListener('click', () => shareModal.classList.remove('active'));
-        playAgainButton.addEventListener('click', () => {
-            shareModal.classList.remove('active');
-            startGame();
-        });
+        playAgainButton.addEventListener('click', () => { shareModal.classList.remove('active'); startGame(); });
         copyResultsButton.addEventListener('click', copyResultsToClipboard);
 
         guessInput.addEventListener("input", debounce(handleGuessInput, 300));
-        guessInput.addEventListener("keydown", function(event) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                submitGuess();
-            }
+        guessInput.addEventListener("keydown", function(event) { if (event.key === "Enter") { event.preventDefault(); submitGuess(); }});
+        document.body.addEventListener('click', (event) => { if (!event.target.closest('.autocomplete-container')) { suggestionsDiv.style.display = 'none'; } });
+
+        // --- NEW SHARE LINK EVENT LISTENERS ---
+        shareLinkButton.addEventListener('click', () => {
+            shareUrlInput.value = window.location.href;
+            shareLinkModal.classList.add('active');
         });
-        document.body.addEventListener('click', (event) => {
-            if (!event.target.closest('.autocomplete-container')) {
-                suggestionsDiv.style.display = 'none';
-            }
+        closeShareLinkButton.addEventListener('click', () => shareLinkModal.classList.remove('active'));
+        shareLinkModal.addEventListener('click', (event) => { if (event.target === shareLinkModal) shareLinkModal.classList.remove('active'); });
+        copyUrlButton.addEventListener('click', () => {
+            shareUrlInput.select();
+            shareUrlInput.setSelectionRange(0, 99999);
+            try {
+                document.execCommand('copy');
+                copyUrlButton.textContent = 'Copied!';
+                setTimeout(() => { copyUrlButton.textContent = 'Copy'; }, 2000);
+            } catch (err) { console.error('Failed to copy text: ', err); }
         });
 
         async function startGame() {
@@ -393,24 +344,18 @@
             feedbackP.classList.remove('correct-guess', 'incorrect-guess');
             guessesLeftDisplay.style.display = 'none';
             hintButton.textContent = 'Get Hint';
-
             guessInput.disabled = true;
             guessButton.disabled = true;
             hintButton.disabled = true;
 
             try {
-                const response = await fetch('/start_game', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({}) 
-                });
+                const response = await fetch('/start_game', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
                 const data = await response.json();
                 loader.style.display = 'none';
                 if (data.error) {
                     feedbackP.textContent = data.error;
                     return;
                 }
-                // --- MODIFIED THIS LINE ---
                 playerPositionP.innerHTML = `Position: <span class="position-badge">${data.position}</span>`;
                 renderTable(data.stats);
                 feedbackP.textContent = "Guess the player based on their stats:";
@@ -438,7 +383,7 @@
             tableBody.innerHTML = '';
             tableHead.innerHTML = '';
             if (!stats || stats.length === 0) return;
-            let desiredOrder = ["Year", "G", "PPR_Rank_by_Pos", "PPR"]; 
+            let desiredOrder = ["Year", "G", "PPR", "PPR_Rank_by_Pos"]; 
             if (stats[0].FantPos === "QB") {
                 desiredOrder.push("PassYds", "PassTD", "RushYds", "RushTD");
             } else {
@@ -478,43 +423,27 @@
             if (!guess) return;
             guessInput.value = '';
             feedbackP.classList.remove('correct-guess', 'incorrect-guess');
-            const response = await fetch('/guess', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ guess: guess })
-            });
+            const response = await fetch('/guess', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ guess: guess }) });
             const data = await response.json();
-            
             updateFeedbackAndGuesses(data);
-
             if (data.result === 'correct' || data.result === 'out_of_guesses') {
                 endGame(data.result, data.guesses_taken);
             }
         }
         
         function handleHintOrGiveUp() {
-            if (hintButton.textContent === 'Give Up?') {
-                giveUp();
-            } else {
-                getHint();
-            }
+            if (hintButton.textContent === 'Give Up?') giveUp(); else getHint();
         }
 
         async function getHint() {
             feedbackP.classList.remove('correct-guess', 'incorrect-guess');
-            const response = await fetch('/hint', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
-            });
+            const response = await fetch('/hint', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
             const data = await response.json();
             updateFeedbackAndGuesses(data);
         }
 
         async function giveUp() {
-            const response = await fetch('/give_up', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
-            });
+            const response = await fetch('/give_up', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
             const data = await response.json();
             updateFeedbackAndGuesses(data);
             endGame(data.result, data.guesses_taken);
@@ -525,20 +454,17 @@
             if (data.hint) {
                 feedbackP.innerHTML += `<br><br>${data.hint}`;
             }
-
             if (data.guesses_left !== undefined) {
                 guessesLeftDisplay.textContent = `Guesses Left: ${data.guesses_left}`;
                 guessesLeftDisplay.style.display = 'block';
             } else {
                 guessesLeftDisplay.style.display = 'none';
             }
-            
             if(data.result === 'correct') {
                 feedbackP.classList.add('correct-guess');
             } else {
                 feedbackP.classList.add('incorrect-guess');
             }
-
             if (data.is_last_guess) {
                 hintButton.textContent = 'Give Up?';
             }
@@ -555,28 +481,19 @@
             const today = new Date();
             const dateString = `${today.getMonth() + 1}/${today.getDate()}/${today.getFullYear()}`;
             shareDate.textContent = dateString;
-
             let grid = '';
             let resultText = '';
-
             if (result === 'correct') {
                 shareTitle.textContent = 'You got it!';
                 resultText = `FumbLe ${dateString}\n🏈 ${guessesTaken}/4`;
-                for (let i = 0; i < 4; i++) {
-                    grid += (i < guessesTaken - 1) ? '⬜' : '🟩';
-                    if (i < guessesTaken - 1) grid = '⬜' + grid.slice(1);
-                    else grid = grid.slice(0,i) + '🟩' + grid.slice(i+1);
-                }
-                grid = '⬜'.repeat(guessesTaken - 1) + '🟩' + '⬜'.repeat(4-guessesTaken)
+                grid = '⬜'.repeat(guessesTaken - 1) + '🟩' + '⬜'.repeat(4-guessesTaken);
             } else {
                 shareTitle.textContent = 'Nice try!';
                 resultText = `FumbLe ${dateString}\n🏈 X/4`;
                 grid = '🟥🟥🟥🟥';
             }
-
             shareGrid.textContent = grid;
             shareableText = `${resultText}\n${grid}`;
-            
             shareModal.classList.add('active');
         }
 
@@ -588,15 +505,10 @@
             try {
                 document.execCommand('copy');
                 copyResultsButton.textContent = 'Copied!';
-                setTimeout(() => {
-                    copyResultsButton.textContent = 'Copy Results';
-                }, 2000);
-            } catch (err) {
-                console.error('Failed to copy text: ', err);
-            }
+                setTimeout(() => { copyResultsButton.textContent = 'Copy Results'; }, 2000);
+            } catch (err) { console.error('Failed to copy text: ', err); }
             document.body.removeChild(textArea);
         }
-
 
         function debounce(func, delay) {
             return function(...args) {
@@ -611,11 +523,7 @@
                 suggestionsDiv.style.display = 'none';
                 return;
             }
-            const response = await fetch('/suggest_players', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query: query })
-            });
+            const response = await fetch('/suggest_players', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: query }) });
             const players = await response.json();
             renderSuggestions(players);
         }
@@ -640,3 +548,4 @@
     </script>
 </body>
 </html>
+
