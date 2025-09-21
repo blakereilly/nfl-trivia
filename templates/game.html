@@ -114,37 +114,26 @@
         #feedback.incorrect-guess { color: #F44336; }
         #guesses-left-display { font-size: 1.1rem; color: #FFC107; font-weight: 600; margin-top: 5px; min-height: 20px; }
 
-        /* --- UI Buttons in Corners --- */
         #rules-container, #share-link-container { position: absolute; top: 15px; z-index: 1000; }
         #rules-container { left: 15px; }
         #share-link-container { right: 15px; }
-
-        /* --- UPDATED RULES BUTTON STYLE --- */
         #rules-button {
             background: none; border: none; color: #aaa;
             font-weight: bold; font-size: 24px; cursor: pointer; padding: 5px;
             transition: all 0.3s ease; width: auto;
         }
-        #rules-button:hover {
-            color: #fff; transform: scale(1.1);
-            background: none; box-shadow: none;
-        }
-
-        /* --- NEW SHARE BUTTON STYLE --- */
+        #rules-button:hover { color: #fff; transform: scale(1.1); background: none; box-shadow: none; }
         #share-link-button {
             background: none; border: none; color: #aaa;
             cursor: pointer; padding: 5px; width: auto;
             transition: all 0.3s ease;
         }
-        #share-link-button:hover {
-            color: #fff; transform: scale(1.1);
-            background: transparent; box-shadow: none;
-        }
+        #share-link-button:hover { color: #fff; transform: scale(1.1); background: transparent; box-shadow: none; }
         #share-link-button svg { vertical-align: middle; }
 
-        #copyright-notice, #data-source { position: absolute; }
-        #copyright-notice { bottom: 20px; left: 20px; z-index: 1000; font-size: 12px; color: #888; font-weight: 600; }
-        #data-source { bottom: 10px; right: 10px; font-size: 10px; color: #888; }
+        #copyright-notice, #data-source { position: absolute; font-size: 12px; color: #888; }
+        #copyright-notice { bottom: 20px; left: 20px; z-index: 1000; font-weight: 600; }
+        #data-source { bottom: 10px; right: 10px; font-size: 10px; }
         #data-source a { color: #2c7be5; text-decoration: none; }
         
         .modal { display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(5px); align-items: center; justify-content: center; }
@@ -152,17 +141,9 @@
         .modal-content { background: rgba(30, 35, 41, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); padding: 30px; width: 90%; max-width: 500px; border-radius: 16px; position: relative; color: white; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); text-align: center; }
         .close-button { color: #aaa; position: absolute; top: 10px; right: 15px; font-size: 28px; font-weight: bold; cursor: pointer; }
         
-        /* --- NEW SHARE LINK MODAL STYLES --- */
         .share-link-input-container { display: flex; width: 100%; margin-top: 15px; }
-        #share-url-input {
-            flex-grow: 1; background-color: #1a1e24; color: #f5f5f5;
-            border: 1px solid #444; border-radius: 8px 0 0 8px;
-            padding: 10px; font-size: 14px; margin: 0;
-        }
-        #copy-url-button {
-            flex-shrink: 0; width: auto; border-radius: 0 8px 8px 0;
-            margin: 0; font-size: 14px; padding: 10px 15px;
-        }
+        #share-url-input { flex-grow: 1; background-color: #1a1e24; color: #f5f5f5; border: 1px solid #444; border-radius: 8px 0 0 8px; padding: 10px; font-size: 14px; margin: 0; }
+        #copy-url-button { flex-shrink: 0; width: auto; border-radius: 0 8px 8px 0; margin: 0; font-size: 14px; padding: 10px 15px; }
 
         .autocomplete-container { position: relative; display: inline-block; width: 100%; }
         #suggestions { position: absolute; z-index: 99; background-color: #1a1e24; color: #f5f5f5; border: 1px solid #444; border-top: none; width: 100%; max-height: 200px; overflow-y: auto; text-align: left; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); border-radius: 0 0 8px 8px; display: none; }
@@ -192,8 +173,6 @@
 <body>
     <div class="page-wrapper">
         <div id="rules-container"><button id="rules-button">?</button></div>
-
-        <!-- NEW SHARE BUTTON -->
         <div id="share-link-container">
             <button id="share-link-button">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
@@ -238,13 +217,13 @@
                 <p id="share-date"></p>
                 <div id="share-grid"></div>
                 <div class="share-buttons">
-                    <button id="play-again-button">Play Again</button>
+                    <!-- UPDATED BUTTON -->
+                    <button id="share-game-button">Share Game</button>
                     <button id="copy-results-button" class="hint-button">Copy Results</button>
                 </div>
             </div>
         </div>
 
-        <!-- NEW SHARE LINK MODAL -->
         <div id="shareLinkModal" class="modal">
             <div class="modal-content">
                 <span id="close-share-link-button" class="close-button">&times;</span>
@@ -274,19 +253,20 @@
         const tableContainer = document.querySelector('.table-container');
         const guessesLeftDisplay = document.getElementById('guesses-left-display');
         
-        // Modal elements
         const rulesButton = document.getElementById('rules-button');
         const rulesModal = document.getElementById('rulesModal');
         const closeRulesButton = document.getElementById('close-rules-button');
+        
         const shareModal = document.getElementById('shareModal');
         const closeShareButton = document.getElementById('close-share-button');
         const shareTitle = document.getElementById('share-title');
         const shareDate = document.getElementById('share-date');
         const shareGrid = document.getElementById('share-grid');
         const copyResultsButton = document.getElementById('copy-results-button');
-        const playAgainButton = document.getElementById('play-again-button');
+        
+        // UPDATED: Renamed variable and get new button
+        const shareGameButton = document.getElementById('share-game-button');
 
-        // --- NEW SHARE LINK ELEMENTS ---
         const shareLinkButton = document.getElementById('share-link-button');
         const shareLinkModal = document.getElementById('shareLinkModal');
         const closeShareLinkButton = document.getElementById('close-share-link-button');
@@ -307,15 +287,21 @@
         rulesButton.addEventListener('click', () => rulesModal.classList.add('active'));
         closeRulesButton.addEventListener('click', () => rulesModal.classList.remove('active'));
         rulesModal.addEventListener('click', (event) => { if (event.target === rulesModal) rulesModal.classList.remove('active'); });
+        
         closeShareButton.addEventListener('click', () => shareModal.classList.remove('active'));
-        playAgainButton.addEventListener('click', () => { shareModal.classList.remove('active'); startGame(); });
         copyResultsButton.addEventListener('click', copyResultsToClipboard);
+
+        // UPDATED: Changed the functionality of the button
+        shareGameButton.addEventListener('click', () => {
+            shareModal.classList.remove('active'); // Close results modal
+            shareUrlInput.value = window.location.origin; // Set URL for sharing
+            shareLinkModal.classList.add('active'); // Open share link modal
+        });
 
         guessInput.addEventListener("input", debounce(handleGuessInput, 300));
         guessInput.addEventListener("keydown", function(event) { if (event.key === "Enter") { event.preventDefault(); submitGuess(); }});
         document.body.addEventListener('click', (event) => { if (!event.target.closest('.autocomplete-container')) { suggestionsDiv.style.display = 'none'; } });
 
-        // --- NEW SHARE LINK EVENT LISTENERS ---
         shareLinkButton.addEventListener('click', () => {
             shareUrlInput.value = window.location.origin;
             shareLinkModal.classList.add('active');
@@ -383,7 +369,7 @@
             tableBody.innerHTML = '';
             tableHead.innerHTML = '';
             if (!stats || stats.length === 0) return;
-            let desiredOrder = ["Year", "G", "PPR_Rank_by_Pos","PPR"]; 
+            let desiredOrder = ["Year", "G", "PPR", "PPR_Rank_by_Pos"]; 
             if (stats[0].FantPos === "QB") {
                 desiredOrder.push("PassYds", "PassTD", "RushYds", "RushTD");
             } else {
