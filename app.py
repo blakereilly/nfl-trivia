@@ -141,13 +141,13 @@ def start_game():
         return jsonify({"error": "No eligible players found for the configured year range."})
     selected_player_name = random.choice(players_for_year['Player'].unique().tolist())
     player_history_df = players_for_year[players_for_year['Player'] == selected_player_name].copy()
-    player_history_df = player_history_df.sort_values(by='Year')
+    player_history_df = player_history_df.sort_values(by='Year',  ascending=False)
     most_frequent_team = get_most_frequent_with_tiebreaker(player_history_df, 'Tm')
     team_details = team_info.get(most_frequent_team, {})
     consistent_conference = team_details.get('conf', 'N/A')
     consistent_division = team_details.get('div', 'N/A')
     selected_player_position = player_history_df.iloc[0]['FantPos']
-    all_columns = ['Year', 'FantPos', 'G', 'PPR', 'PPR_Rank_by_Pos', 'PassYds', 'PassTD', 'RushYds', 'RushTD', 'Rec', 'RecYds', 'RecTD']
+    all_columns = ['Year', 'FantPos', 'G', 'PPR_Rank_by_Pos', 'PPR', 'PassYds', 'PassTD', 'RushYds', 'RushTD', 'Rec', 'RecYds', 'RecTD']
     columns_to_show = [col for col in all_columns if col in player_history_df.columns]
     display_df = player_history_df[columns_to_show]
     stats_json = display_df.to_dict('records')
