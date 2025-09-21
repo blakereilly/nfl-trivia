@@ -317,7 +317,7 @@
 
         // --- NEW SHARE LINK EVENT LISTENERS ---
         shareLinkButton.addEventListener('click', () => {
-            shareUrlInput.value = window.location.href;
+            shareUrlInput.value = window.location.origin;
             shareLinkModal.classList.add('active');
         });
         closeShareLinkButton.addEventListener('click', () => shareLinkModal.classList.remove('active'));
