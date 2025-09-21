@@ -49,6 +49,17 @@
             font-size: 1.5rem; color: #00f2ea; margin: 10px 0 20px 0;
             font-weight: 600;
         }
+        /* --- ADDED THIS NEW STYLE --- */
+        .position-badge {
+            display: inline-block;
+            background-color: #2c7be5; /* Blue background */
+            color: #ffffff; /* White text */
+            padding: 5px 12px; /* Vertical and horizontal padding */
+            border-radius: 12px; /* Rounded corners */
+            font-size: 1.4rem; /* Slightly smaller font to fit well */
+            margin-left: 8px; /* Space between "Position:" and the badge */
+            vertical-align: middle; /* Aligns badge with the text */
+        }
         .game-controls {
             display: flex; flex-direction: column; align-items: center; margin-bottom: 15px; width: 100%; max-width: 350px;
             gap: 10px;
@@ -399,7 +410,8 @@
                     feedbackP.textContent = data.error;
                     return;
                 }
-                playerPositionP.textContent = `Position: ${data.position}`;
+                // --- MODIFIED THIS LINE ---
+                playerPositionP.innerHTML = `Position: <span class="position-badge">${data.position}</span>`;
                 renderTable(data.stats);
                 feedbackP.textContent = "Guess the player based on their stats:";
                 guessInput.value = "";
@@ -628,4 +640,3 @@
     </script>
 </body>
 </html>
-
