@@ -369,7 +369,7 @@
             tableBody.innerHTML = '';
             tableHead.innerHTML = '';
             if (!stats || stats.length === 0) return;
-            let desiredOrder = ["Year", "G", "PPR", "PPR_Rank_by_Pos"]; 
+            let desiredOrder = ["Year", "G", "PPR_Rank_by_Pos", "PPR" ]; 
             if (stats[0].FantPos === "QB") {
                 desiredOrder.push("PassYds", "PassTD", "RushYds", "RushTD");
             } else {
