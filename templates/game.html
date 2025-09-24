@@ -40,7 +40,7 @@
             z-index: 10;
         }
         .page-header h1 {
-            font-size: 2.5rem;
+            font-size: 2.2rem; /* Decreased font size */
             margin: 0;
             text-shadow: 0 0 10px rgba(0, 242, 234, 0.5), 0 0 20px rgba(0, 242, 234, 0.3);
         }
@@ -59,7 +59,9 @@
         }
         .player-info-container {
             display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
-            gap: 10px 20px; margin: 10px 0 20px 0; visibility: hidden;
+            gap: 10px 20px;
+            margin: 0 0 20px 0; /* Removed top margin to reduce space */
+            visibility: hidden;
         }
         #playerPosition { font-size: 1.5rem; color: #00f2ea; font-weight: 600; }
         .position-badge {
@@ -70,6 +72,8 @@
         .difficulty-badge {
             padding: 6px 14px; border-radius: 12px; font-size: 1.2rem;
             font-weight: 600;
+            margin-top: 20px; /* Added space for when it's under the table */
+            visibility: hidden; /* Hide initially */
         }
         .difficulty-easy { background-color: #4CAF50; color: white; }
         .difficulty-medium { background-color: #FFC107; color: #1a1e24; }
@@ -194,11 +198,11 @@
             <p id="guesses-left-display" style="display: none;"></p> 
             <div class="player-info-container">
                 <p id="playerPosition"></p>
-                <div id="playerDifficulty" class="difficulty-badge"></div>
             </div>
             <div class="table-container" style="visibility: hidden;">
                 <table id="statsTable"><thead></thead><tbody></tbody></table>
             </div>
+            <div id="playerDifficulty" class="difficulty-badge"></div>
         </div>
         
         <div id="rulesModal" class="modal"><div class="modal-content"><span id="close-rules-button" class="close-button">&times;</span><h2>How to Play FumbLe</h2><p>1. An NFL player's position and career stats will be displayed. Your goal is to guess their name.</p><p>2. You get 4 guesses. If you are stuck, you can use the "Get Hint" button but it will take away one of your guesses.</p><p>3. The order of hints will be: Conference, Division, then Team.</p><p>4. Share your results with friends!</p><p>Do you know ball?</p></div></div>
@@ -266,6 +270,8 @@
             instructionTextP.style.visibility = 'hidden';
             instructionTextP.classList.remove('fade-in');
             feedbackP.textContent = "";
+            playerDifficultyDiv.style.visibility = 'hidden'; // Hide difficulty badge on reset
+            playerDifficultyDiv.classList.remove('fade-in');
 
             loader.style.display = 'block';
             gameControls.style.visibility = 'hidden';
@@ -313,14 +319,17 @@
                 hintButton.disabled = false;
                 statsTable.style.display = 'table';
                 
+                // Fade in all game elements
                 instructionTextP.style.visibility = 'visible';
                 instructionTextP.classList.add('fade-in');
                 gameControls.style.visibility = 'visible';
                 playerInfoContainer.style.visibility = 'visible';
                 tableContainer.style.visibility = 'visible';
+                playerDifficultyDiv.style.visibility = 'visible'; // Show difficulty badge
                 gameControls.classList.add('fade-in');
                 playerInfoContainer.classList.add('fade-in');
                 tableContainer.classList.add('fade-in');
+                playerDifficultyDiv.classList.add('fade-in'); // Fade in difficulty badge
             } catch (error) {
                 loader.style.display = 'none';
                 feedbackP.textContent = "Failed to start the game. Please try again.";
