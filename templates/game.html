@@ -28,7 +28,6 @@
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             padding: 20px; overflow-x: hidden;
         }
-        /* START: New Header Styles */
         .page-header {
             width: 100%;
             display: flex;
@@ -49,13 +48,11 @@
             display: flex;
             gap: 10px;
         }
-        /* END: New Header Styles */
         .main-content {
             display: flex; flex-direction: column; align-items: center;
             width: 100%; max-width: 1200px; text-align: center;
             background: rgba(42, 46, 52, 0.5);
             backdrop-filter: blur(12px);
-            border: 1px solid rgba(0, 242, 234, 0.2);
             border-radius: 16px;
             padding: 30px;
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37), 0 0 15px rgba(0, 242, 234, 0.1);
@@ -177,6 +174,7 @@
                 </button>
             </div>
         </header>
+        
         <div class="main-content">
             <div id="loader" class="loader" style="display: none;"></div>
             
@@ -192,6 +190,7 @@
                 <button id="hintButton" class="hint-button" disabled>Get Hint</button>
             </div>
             <p id="feedback"></p>
+
             <p id="guesses-left-display" style="display: none;"></p> 
             <div class="player-info-container">
                 <p id="playerPosition"></p>
@@ -210,7 +209,6 @@
     </div>
 
     <script>
-        // START: Added instructionTextP to element selectors
         const instructionTextP = document.getElementById("instruction-text");
         const guessInput = document.getElementById("guessInput");
         const guessButton = document.getElementById("guessButton");
@@ -225,7 +223,6 @@
         const gameControls = document.querySelector('.game-controls');
         const tableContainer = document.querySelector('.table-container');
         const guessesLeftDisplay = document.getElementById('guesses-left-display');
-        // END: Added instructionTextP
         
         const rulesButton = document.getElementById('rules-button');
         const rulesModal = document.getElementById('rulesModal');
@@ -265,12 +262,10 @@
         copyUrlButton.addEventListener('click', () => { shareUrlInput.select(); shareUrlInput.setSelectionRange(0, 99999); try { document.execCommand('copy'); copyUrlButton.textContent = 'Copied!'; setTimeout(() => { copyUrlButton.textContent = 'Copy'; }, 2000); } catch (err) { console.error('Failed to copy text: ', err); } });
 
         async function startGame() {
-            // START: Modified reset logic
             instructionTextP.textContent = "";
             instructionTextP.style.visibility = 'hidden';
             instructionTextP.classList.remove('fade-in');
             feedbackP.textContent = "";
-            // END: Modified reset logic
 
             loader.style.display = 'block';
             gameControls.style.visibility = 'hidden';
@@ -310,9 +305,7 @@
 
                 renderTable(data.stats);
                 
-                // START: Instruction text now goes to its own element
                 instructionTextP.textContent = "Guess the player based on their stats:";
-                // END: Instruction text change
                 
                 guessInput.value = "";
                 guessInput.disabled = false;
@@ -320,7 +313,6 @@
                 hintButton.disabled = false;
                 statsTable.style.display = 'table';
                 
-                // Fade in all game elements
                 instructionTextP.style.visibility = 'visible';
                 instructionTextP.classList.add('fade-in');
                 gameControls.style.visibility = 'visible';
