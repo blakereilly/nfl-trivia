@@ -63,6 +63,16 @@
             display: flex; flex-direction: column; align-items: center; margin-bottom: 15px; width: 100%; max-width: 350px;
             gap: 10px;
         }
+        /* UPDATED: New styles for the button container and its children */
+        .button-row {
+            display: flex;
+            width: 100%;
+            gap: 10px;
+        }
+        .button-row button {
+            flex: 1; /* Allows buttons to share space equally */
+            margin: 0; /* Overrides the general margin for buttons */
+        }
         .table-container {
             overflow-x: auto; width: 100%; margin: 15px 0;
             border-radius: 12px;
@@ -187,8 +197,10 @@
                     <input type="text" id="guessInput" placeholder="Enter player name" disabled>
                     <div id="suggestions"></div>
                 </div>
-                <button id="guessButton" disabled>Enter</button>
-                <button id="hintButton" class="hint-button" disabled>Get Hint</button>
+                <div class="button-row">
+                    <button id="hintButton" class="hint-button" disabled>Get Hint</button>
+                    <button id="guessButton" disabled>Enter</button>
+                </div>
             </div>
             <p id="feedback"></p>
             <p id="guesses-left-display" style="display: none;"></p> 
@@ -217,7 +229,6 @@
                 <p id="share-date"></p>
                 <div id="share-grid"></div>
                 <div class="share-buttons">
-                    <!-- UPDATED BUTTON -->
                     <button id="share-game-button">Share Game</button>
                     <button id="copy-results-button" class="hint-button">Copy Results</button>
                 </div>
@@ -264,7 +275,6 @@
         const shareGrid = document.getElementById('share-grid');
         const copyResultsButton = document.getElementById('copy-results-button');
         
-        // UPDATED: Renamed variable and get new button
         const shareGameButton = document.getElementById('share-game-button');
 
         const shareLinkButton = document.getElementById('share-link-button');
@@ -291,11 +301,10 @@
         closeShareButton.addEventListener('click', () => shareModal.classList.remove('active'));
         copyResultsButton.addEventListener('click', copyResultsToClipboard);
 
-        // UPDATED: Changed the functionality of the button
         shareGameButton.addEventListener('click', () => {
-            shareModal.classList.remove('active'); // Close results modal
-            shareUrlInput.value = window.location.origin; // Set URL for sharing
-            shareLinkModal.classList.add('active'); // Open share link modal
+            shareModal.classList.remove('active');
+            shareUrlInput.value = window.location.origin;
+            shareLinkModal.classList.add('active');
         });
 
         guessInput.addEventListener("input", debounce(handleGuessInput, 300));
@@ -534,4 +543,3 @@
     </script>
 </body>
 </html>
-
