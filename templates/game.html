@@ -39,53 +39,38 @@
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37), 0 0 15px rgba(0, 242, 234, 0.1);
         }
         h1 { 
-            margin: 0 0 10px 0; 
-            font-size: 3rem;
-            font-weight: 700;
-            color: #fff;
+            margin: 0 0 10px 0; font-size: 3rem; font-weight: 700; color: #fff;
             text-shadow: 0 0 10px rgba(0, 242, 234, 0.5), 0 0 20px rgba(0, 242, 234, 0.3);
         }
-        #playerPosition {
-            font-size: 1.5rem; color: #00f2ea; margin: 10px 0 20px 0;
+        .player-info-container {
+            display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
+            gap: 10px 20px; margin: 10px 0 20px 0; visibility: hidden;
+        }
+        #playerPosition { font-size: 1.5rem; color: #00f2ea; font-weight: 600; }
+        .position-badge {
+            display: inline-block; background-color: #2c7be5; color: #ffffff;
+            padding: 5px 12px; border-radius: 12px; font-size: 1.4rem;
+            margin-left: 8px; vertical-align: middle;
+        }
+        .difficulty-badge {
+            padding: 6px 14px; border-radius: 12px; font-size: 1.2rem;
             font-weight: 600;
         }
-        .position-badge {
-            display: inline-block;
-            background-color: #2c7be5;
-            color: #ffffff;
-            padding: 5px 12px;
-            border-radius: 12px;
-            font-size: 1.4rem;
-            margin-left: 8px;
-            vertical-align: middle;
-        }
+        .difficulty-easy { background-color: #4CAF50; color: white; }
+        .difficulty-medium { background-color: #FFC107; color: #1a1e24; }
+        .difficulty-hard { background-color: #F44336; color: white; }
+
         .game-controls {
             display: flex; flex-direction: column; align-items: center; margin-bottom: 15px; width: 100%; max-width: 350px;
             gap: 10px;
-        }
-        /* UPDATED: New styles for the button container and its children */
-        .button-row {
-            display: flex;
-            width: 100%;
-            gap: 10px;
-        }
-        .button-row button {
-            flex: 1; /* Allows buttons to share space equally */
-            margin: 0; /* Overrides the general margin for buttons */
         }
         .table-container {
             overflow-x: auto; width: 100%; margin: 15px 0;
             border-radius: 12px;
             border: 1px solid rgba(0, 242, 234, 0.1);
         }
-        #statsTable {
-            width: 100%; border-collapse: collapse; font-size: 14px; min-width: 600px;
-        }
-        #statsTable th, #statsTable td {
-            border: none;
-            border-bottom: 1px solid #2a2e34;
-            padding: 14px; white-space: nowrap; text-align: center;
-        }
+        #statsTable { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 600px; }
+        #statsTable th, #statsTable td { border: none; border-bottom: 1px solid #2a2e34; padding: 14px; white-space: nowrap; text-align: center; }
         #statsTable th { background-color: #2c7be5; color: white; font-weight: 600; }
         #statsTable th:first-child { border-radius: 12px 0 0 0; }
         #statsTable th:last-child { border-radius: 0 12px 0 0; }
@@ -98,24 +83,12 @@
         .highlight-yellow { background-color: #FFC107 !important; color: #1a1e24 !important; font-weight: 600; }
         .highlight-red { background-color: #F44336 !important; color: white !important; font-weight: 600; }
         
-        input, button {
-            padding: 12px; font-size: 16px; margin: 5px; border-radius: 8px; border: none; width: 100%;
-            transition: all 0.3s ease;
-        }
-        button { 
-            background-color: #2c7be5; color: white; cursor: pointer; font-weight: 600;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        }
-        button:hover:not(:disabled) { 
-            background-color: #1a5bb8;
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(44, 123, 229, 0.4), 0 0 15px rgba(44, 123, 229, 0.5);
-        }
+        input, button { padding: 12px; font-size: 16px; margin: 5px; border-radius: 8px; border: none; width: 100%; transition: all 0.3s ease; }
+        button { background-color: #2c7be5; color: white; cursor: pointer; font-weight: 600; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); }
+        button:hover:not(:disabled) { background-color: #1a5bb8; transform: translateY(-3px); box-shadow: 0 6px 20px rgba(44, 123, 229, 0.4), 0 0 15px rgba(44, 123, 229, 0.5); }
         button:disabled { background-color: #555; cursor: not-allowed; color: #999; border-color: #555; }
         
-        .hint-button {
-            background-color: transparent; border: 2px solid #2c7be5; color: #2c7be5;
-        }
+        .hint-button { background-color: transparent; border: 2px solid #2c7be5; color: #2c7be5; }
         .hint-button:hover:not(:disabled) { background-color: #2c7be5; color: white; }
         input[type="text"] { background-color: #2a2e34; color: #f5f5f5; border: 1px solid #444; }
         input[type="text"]:focus { outline: none; border-color: #00f2ea; box-shadow: 0 0 8px rgba(0, 242, 234, 0.5); }
@@ -125,19 +98,10 @@
         #guesses-left-display { font-size: 1.1rem; color: #FFC107; font-weight: 600; margin-top: 5px; min-height: 20px; }
 
         #rules-container, #share-link-container { position: absolute; top: 15px; z-index: 1000; }
-        #rules-container { left: 15px; }
-        #share-link-container { right: 15px; }
-        #rules-button {
-            background: none; border: none; color: #aaa;
-            font-weight: bold; font-size: 24px; cursor: pointer; padding: 5px;
-            transition: all 0.3s ease; width: auto;
-        }
+        #rules-container { left: 15px; } #share-link-container { right: 15px; }
+        #rules-button { background: none; border: none; color: #aaa; font-weight: bold; font-size: 24px; cursor: pointer; padding: 5px; transition: all 0.3s ease; width: auto; }
         #rules-button:hover { color: #fff; transform: scale(1.1); background: none; box-shadow: none; }
-        #share-link-button {
-            background: none; border: none; color: #aaa;
-            cursor: pointer; padding: 5px; width: auto;
-            transition: all 0.3s ease;
-        }
+        #share-link-button { background: none; border: none; color: #aaa; cursor: pointer; padding: 5px; width: auto; transition: all 0.3s ease; }
         #share-link-button:hover { color: #fff; transform: scale(1.1); background: transparent; box-shadow: none; }
         #share-link-button svg { vertical-align: middle; }
 
@@ -175,8 +139,7 @@
             #copyright-notice { position: fixed; bottom: 10px; left: 10px; }
             #data-source { position: fixed; bottom: 5px; right: 5px; font-size: 8px; }
             #rules-container, #share-link-container { top: 10px; }
-            #rules-container { left: 10px; }
-            #share-link-container { right: 10px; }
+            #rules-container { left: 10px; } #share-link-container { right: 10px; }
         }
     </style>
 </head>
@@ -185,7 +148,7 @@
         <div id="rules-container"><button id="rules-button">?</button></div>
         <div id="share-link-container">
             <button id="share-link-button">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
             </button>
         </div>
 
@@ -197,56 +160,23 @@
                     <input type="text" id="guessInput" placeholder="Enter player name" disabled>
                     <div id="suggestions"></div>
                 </div>
-                <div class="button-row">
-                    <button id="hintButton" class="hint-button" disabled>Get Hint</button>
-                    <button id="guessButton" disabled>Enter</button>
-                </div>
+                <button id="guessButton" disabled>Enter</button>
+                <button id="hintButton" class="hint-button" disabled>Get Hint</button>
             </div>
             <p id="feedback"></p>
             <p id="guesses-left-display" style="display: none;"></p> 
-            <p id="playerPosition" style="visibility: hidden;"></p>
+            <div class="player-info-container">
+                <p id="playerPosition"></p>
+                <div id="playerDifficulty" class="difficulty-badge"></div>
+            </div>
             <div class="table-container" style="visibility: hidden;">
                 <table id="statsTable"><thead></thead><tbody></tbody></table>
             </div>
         </div>
         
-        <div id="rulesModal" class="modal">
-            <div class="modal-content">
-                <span id="close-rules-button" class="close-button">&times;</span>
-                <h2>How to Play FumbLe</h2>
-                <p>1. An NFL player's position and career stats will be displayed. Your goal is to guess their name.</p>
-                <p>2. You get 4 guesses. If you are stuck, you can use the "Get Hint" button but it will take away one of your guesses.</p>
-                <p>3. The order of hints will be: Conference, Division, then Team.</p>
-                <p>4. Share your results with friends!</p>
-                <p>Do you know ball?</p>
-            </div>
-        </div>
-
-        <div id="shareModal" class="modal">
-            <div class="modal-content">
-                <span id="close-share-button" class="close-button">&times;</span>
-                <h2 id="share-title">Results</h2>
-                <p id="share-date"></p>
-                <div id="share-grid"></div>
-                <div class="share-buttons">
-                    <button id="share-game-button">Share Game</button>
-                    <button id="copy-results-button" class="hint-button">Copy Results</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="shareLinkModal" class="modal">
-            <div class="modal-content">
-                <span id="close-share-link-button" class="close-button">&times;</span>
-                <h2>Share FumbLe</h2>
-                <p>Share this link with your friends to challenge them!</p>
-                <div class="share-link-input-container">
-                    <input type="text" id="share-url-input" readonly>
-                    <button id="copy-url-button">Copy</button>
-                </div>
-            </div>
-        </div>
-
+        <div id="rulesModal" class="modal"><div class="modal-content"><span id="close-rules-button" class="close-button">&times;</span><h2>How to Play FumbLe</h2><p>1. An NFL player's position and career stats will be displayed. Your goal is to guess their name.</p><p>2. You get 4 guesses. If you are stuck, you can use the "Get Hint" button but it will take away one of your guesses.</p><p>3. The order of hints will be: Conference, Division, then Team.</p><p>4. Share your results with friends!</p><p>Do you know ball?</p></div></div>
+        <div id="shareModal" class="modal"><div class="modal-content"><span id="close-share-button" class="close-button">&times;</span><h2 id="share-title">Results</h2><p id="share-date"></p><div id="share-grid"></div><div class="share-buttons"><button id="share-game-button">Share Game</button><button id="copy-results-button" class="hint-button">Copy Results</button></div></div></div>
+        <div id="shareLinkModal" class="modal"><div class="modal-content"><span id="close-share-link-button" class="close-button">&times;</span><h2>Share FumbLe</h2><p>Share this link with your friends to challenge them!</p><div class="share-link-input-container"><input type="text" id="share-url-input" readonly><button id="copy-url-button">Copy</button></div></div></div>
         <p id="copyright-notice">ReillyLabs &copy; 2025</p>
         <p id="data-source">Player Data from <a href="https://www.pro-football-reference.com/" target="_blank">Pro Football Reference</a></p>
     </div>
@@ -256,7 +186,9 @@
         const guessButton = document.getElementById("guessButton");
         const hintButton = document.getElementById("hintButton");
         const feedbackP = document.getElementById("feedback");
+        const playerInfoContainer = document.querySelector('.player-info-container');
         const playerPositionP = document.getElementById("playerPosition");
+        const playerDifficultyDiv = document.getElementById("playerDifficulty");
         const statsTable = document.getElementById("statsTable");
         const suggestionsDiv = document.getElementById("suggestions");
         const loader = document.getElementById('loader');
@@ -267,27 +199,20 @@
         const rulesButton = document.getElementById('rules-button');
         const rulesModal = document.getElementById('rulesModal');
         const closeRulesButton = document.getElementById('close-rules-button');
-        
         const shareModal = document.getElementById('shareModal');
         const closeShareButton = document.getElementById('close-share-button');
         const shareTitle = document.getElementById('share-title');
         const shareDate = document.getElementById('share-date');
         const shareGrid = document.getElementById('share-grid');
         const copyResultsButton = document.getElementById('copy-results-button');
-        
         const shareGameButton = document.getElementById('share-game-button');
-
         const shareLinkButton = document.getElementById('share-link-button');
         const shareLinkModal = document.getElementById('shareLinkModal');
         const closeShareLinkButton = document.getElementById('close-share-link-button');
         const shareUrlInput = document.getElementById('share-url-input');
         const copyUrlButton = document.getElementById('copy-url-button');
 
-        const columnMap = {
-            "Year": "Yr", "G": "Games", "PPR": "PPR Pts", "PPR_Rank_by_Pos": "PPR Rank",
-            "PassYds": "Pass Yd", "PassTD": "Pass TD", "Rec": "Rec", "RecYds": "Rec Yd", "RecTD": "Rec TD",
-            "RushYds": "Rush Yd", "RushTD": "Rush TD",
-        };
+        const columnMap = { "Year": "Yr", "G": "Games", "PPR": "PPR Pts", "PPR_Rank_by_Pos": "PPR Rank", "PassYds": "Pass Yd", "PassTD": "Pass TD", "Rec": "Rec", "RecYds": "Rec Yd", "RecTD": "Rec TD", "RushYds": "Rush Yd", "RushTD": "Rush TD", };
         let debounceTimeout;
         let shareableText = '';
 
@@ -297,44 +222,25 @@
         rulesButton.addEventListener('click', () => rulesModal.classList.add('active'));
         closeRulesButton.addEventListener('click', () => rulesModal.classList.remove('active'));
         rulesModal.addEventListener('click', (event) => { if (event.target === rulesModal) rulesModal.classList.remove('active'); });
-        
         closeShareButton.addEventListener('click', () => shareModal.classList.remove('active'));
         copyResultsButton.addEventListener('click', copyResultsToClipboard);
-
-        shareGameButton.addEventListener('click', () => {
-            shareModal.classList.remove('active');
-            shareUrlInput.value = window.location.origin;
-            shareLinkModal.classList.add('active');
-        });
-
+        shareGameButton.addEventListener('click', () => { shareModal.classList.remove('active'); shareUrlInput.value = window.location.origin; shareLinkModal.classList.add('active'); });
         guessInput.addEventListener("input", debounce(handleGuessInput, 300));
         guessInput.addEventListener("keydown", function(event) { if (event.key === "Enter") { event.preventDefault(); submitGuess(); }});
         document.body.addEventListener('click', (event) => { if (!event.target.closest('.autocomplete-container')) { suggestionsDiv.style.display = 'none'; } });
-
-        shareLinkButton.addEventListener('click', () => {
-            shareUrlInput.value = window.location.origin;
-            shareLinkModal.classList.add('active');
-        });
+        shareLinkButton.addEventListener('click', () => { shareUrlInput.value = window.location.origin; shareLinkModal.classList.add('active'); });
         closeShareLinkButton.addEventListener('click', () => shareLinkModal.classList.remove('active'));
         shareLinkModal.addEventListener('click', (event) => { if (event.target === shareLinkModal) shareLinkModal.classList.remove('active'); });
-        copyUrlButton.addEventListener('click', () => {
-            shareUrlInput.select();
-            shareUrlInput.setSelectionRange(0, 99999);
-            try {
-                document.execCommand('copy');
-                copyUrlButton.textContent = 'Copied!';
-                setTimeout(() => { copyUrlButton.textContent = 'Copy'; }, 2000);
-            } catch (err) { console.error('Failed to copy text: ', err); }
-        });
+        copyUrlButton.addEventListener('click', () => { shareUrlInput.select(); shareUrlInput.setSelectionRange(0, 99999); try { document.execCommand('copy'); copyUrlButton.textContent = 'Copied!'; setTimeout(() => { copyUrlButton.textContent = 'Copy'; }, 2000); } catch (err) { console.error('Failed to copy text: ', err); } });
 
         async function startGame() {
             feedbackP.textContent = "";
             loader.style.display = 'block';
             gameControls.style.visibility = 'hidden';
-            playerPositionP.style.visibility = 'hidden';
+            playerInfoContainer.style.visibility = 'hidden';
             tableContainer.style.visibility = 'hidden';
             gameControls.classList.remove('fade-in');
-            playerPositionP.classList.remove('fade-in');
+            playerInfoContainer.classList.remove('fade-in');
             tableContainer.classList.remove('fade-in');
             feedbackP.classList.remove('correct-guess', 'incorrect-guess');
             guessesLeftDisplay.style.display = 'none';
@@ -351,7 +257,20 @@
                     feedbackP.textContent = data.error;
                     return;
                 }
+                
                 playerPositionP.innerHTML = `Position: <span class="position-badge">${data.position}</span>`;
+                
+                const difficulty = data.difficulty;
+                playerDifficultyDiv.textContent = `Difficulty: ${difficulty.toFixed(1)}`;
+                playerDifficultyDiv.className = 'difficulty-badge'; 
+                if (difficulty <= 4.0) {
+                    playerDifficultyDiv.classList.add('difficulty-easy');
+                } else if (difficulty <= 7.5) {
+                    playerDifficultyDiv.classList.add('difficulty-medium');
+                } else {
+                    playerDifficultyDiv.classList.add('difficulty-hard');
+                }
+
                 renderTable(data.stats);
                 feedbackP.textContent = "Guess the player based on their stats:";
                 guessInput.value = "";
@@ -360,10 +279,10 @@
                 hintButton.disabled = false;
                 statsTable.style.display = 'table';
                 gameControls.style.visibility = 'visible';
-                playerPositionP.style.visibility = 'visible';
+                playerInfoContainer.style.visibility = 'visible';
                 tableContainer.style.visibility = 'visible';
                 gameControls.classList.add('fade-in');
-                playerPositionP.classList.add('fade-in');
+                playerInfoContainer.classList.add('fade-in');
                 tableContainer.classList.add('fade-in');
             } catch (error) {
                 loader.style.display = 'none';
@@ -412,7 +331,6 @@
                 tableBody.appendChild(row);
             });
         }
-
         async function submitGuess() {
             const guess = guessInput.value.trim();
             if (!guess) return;
@@ -425,25 +343,19 @@
                 endGame(data.result, data.guesses_taken);
             }
         }
-        
-        function handleHintOrGiveUp() {
-            if (hintButton.textContent === 'Give Up?') giveUp(); else getHint();
-        }
-
+        function handleHintOrGiveUp() { if (hintButton.textContent === 'Give Up?') giveUp(); else getHint(); }
         async function getHint() {
             feedbackP.classList.remove('correct-guess', 'incorrect-guess');
             const response = await fetch('/hint', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
             const data = await response.json();
             updateFeedbackAndGuesses(data);
         }
-
         async function giveUp() {
             const response = await fetch('/give_up', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
             const data = await response.json();
             updateFeedbackAndGuesses(data);
             endGame(data.result, data.guesses_taken);
         }
-
         function updateFeedbackAndGuesses(data) {
             feedbackP.innerHTML = data.message;
             if (data.hint) {
@@ -464,14 +376,12 @@
                 hintButton.textContent = 'Give Up?';
             }
         }
-        
         function endGame(result, guessesTaken) {
             guessInput.disabled = true;
             guessButton.disabled = true;
             hintButton.disabled = true;
             showShareModal(result, guessesTaken);
         }
-
         function showShareModal(result, guessesTaken) {
             const today = new Date();
             const dateString = `${today.getMonth() + 1}/${today.getDate()}/${today.getFullYear()}`;
@@ -491,7 +401,6 @@
             shareableText = `${resultText}\n${grid}`;
             shareModal.classList.add('active');
         }
-
         function copyResultsToClipboard() {
             const textArea = document.createElement('textarea');
             textArea.value = shareableText;
@@ -504,14 +413,12 @@
             } catch (err) { console.error('Failed to copy text: ', err); }
             document.body.removeChild(textArea);
         }
-
         function debounce(func, delay) {
             return function(...args) {
                 clearTimeout(debounceTimeout);
                 debounceTimeout = setTimeout(() => func.apply(this, args), delay);
             };
         }
-
         async function handleGuessInput() {
             const query = guessInput.value.trim();
             if (query.length < 2) {
@@ -522,7 +429,6 @@
             const players = await response.json();
             renderSuggestions(players);
         }
-
         function renderSuggestions(players) {
             suggestionsDiv.innerHTML = '';
             if (players && players.length > 0) {
