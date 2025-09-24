@@ -63,10 +63,10 @@
             margin: 0 0 15px 0; /* Reduced bottom margin */
             visibility: hidden;
         }
-        #playerPosition { font-size: 1.5rem; color: #00f2ea; font-weight: 600; }
+        #playerPosition { font-size: 18px; font-weight: 600; }
         .position-badge {
             display: inline-block; background-color: #2c7be5; color: #ffffff;
-            padding: 5px 12px; border-radius: 12px; font-size: 1.4rem;
+            padding: 5px 8px; border-radius: 12px; font-size: 18px;
             margin-left: 8px; vertical-align: middle;
         }
         .difficulty-badge {
@@ -295,7 +295,9 @@
                     feedbackP.textContent = data.error;
                     return;
                 }
-                
+
+                // Styling for badge
+                //playerPositionP.innerHTML = `Position: ${data.position}`;
                 playerPositionP.innerHTML = `Position: <span class="position-badge">${data.position}</span>`;
                 
                 const difficulty = data.difficulty;
