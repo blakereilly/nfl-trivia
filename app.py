@@ -2,22 +2,29 @@ import os
 import random
 import pandas as pd
 from flask import Flask, jsonify, request, session, render_template
+#Above lines import py classes needed. os for file paths and flask for hosting webapp
 
+#Creates instance of flask webapp
 app = Flask(__name__)
 app.secret_key = 'your_super_secret_key'  # Change this to a secure secret key
 
+#Locates full stats and combined stats files
 # --- Data Processing and Pre-filtering (Runs Once) ---
 base_dir = os.path.join(os.path.dirname(__file__), 'stats')
 processed_data_path = os.path.join(base_dir, 'combined_stats.csv')
+#Define earliest year for eligible players
 EARLIEST_YEAR = 2011
 years = range(2010, 2025)
+#Initialize data frames as a list
 all_dfs = []
 
+#Create map for team names to normalize with team info
 team_name_map = {
     'GNB': 'GB', 'LVR': 'LV', 'OAK': 'LV', 'NWE': 'NE', 'KAN': 'KC',
     'NOR': 'NO', 'TAM': 'TB', 'SFO': 'SF', 'WSH': 'WAS'
 }
 
+#Create map for player hints
 team_info = {
     'ARI': {'conf': 'NFC', 'div': 'West'}, 'ATL': {'conf': 'NFC', 'div': 'South'},
     'BAL': {'conf': 'AFC', 'div': 'North'}, 'BUF': {'conf': 'AFC', 'div': 'East'},
@@ -39,11 +46,13 @@ team_info = {
     'TOT': {'conf': 'N/A', 'div': 'N/A'}, 'FA': {'conf': 'N/A', 'div': 'N/A'}
 }
 
+#Check if combined stats file already exists to avoid repeating data processing
 if os.path.exists(processed_data_path):
     print("Loading data from cached file...")
     combined_df = pd.read_csv(processed_data_path)
     print("Data loaded instantly!")
 else:
+    #Take individual yearly stats files and combine into one large combined csv file
     print("No cached file found. Generating new data file...")
     for year in years:
         file_name = f'player_stats{year}.csv'
@@ -78,6 +87,8 @@ else:
     combined_df['PPR_Rank_by_Pos'] = combined_df.groupby(['Year', 'FantPos'])['PPR'].rank(ascending=False, method='dense').astype(int)
     combined_df = combined_df[combined_df['FantPos'] != 'FB'].copy()
 
+    #Difficulty calculator. But something is wrong with it
+    #It should calculate dificulties only on eligible players but it's doing it for each player each season
     # --- START: One-Time Difficulty Calculation ---
     print("Calculating player difficulty ratings for the first time...")
     CONFIG = {
@@ -133,7 +144,7 @@ else:
     combined_df.to_csv(processed_data_path, index=False)
     print("Data processing complete and saved with difficulty ratings.")
 
-
+#Define player eligibility to only allow players with certain criteria
 # --- Player Eligibility and Final DataFrame Preparation ---
 if 'Player' not in combined_df.columns:
     print("Fatal Error: 'Player' column is missing. Cannot proceed.")
@@ -158,9 +169,10 @@ eligible_players_prefiltered = eligible_players_df[
 
 if eligible_players_prefiltered.empty:
     print(f"Warning: No eligible players found for starting year {EARLIEST_YEAR}.")
-print("All eligible players pre-filtered and stored!")
+print(f"All eligible players pre-filtered and stored!")
 
-
+#If a player has played for different teams for same amount of seasons, tiebreaker goes to recent.
+#This function is called within the game routes
 def get_most_frequent_with_tiebreaker(df, column):
     if df.empty: return "N/A"
     counts = df[column].value_counts()
@@ -177,6 +189,7 @@ def get_most_frequent_with_tiebreaker(df, column):
                 most_recent_year = most_recent_season_for_value
                 most_recent_value = value
         return most_recent_value
+
 
 
 @app.route('/')
