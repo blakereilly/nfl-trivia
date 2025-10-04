@@ -191,24 +191,31 @@ def get_most_frequent_with_tiebreaker(df, column):
         return most_recent_value
 
 
+#Start of API endpoints. These are the routes called by the front end javascript
 
+#Render and return Landing Page html
 @app.route('/')
 def home():
     return render_template('landing.html')
 
+#Render and return Game html
 @app.route('/game')
 def game_page():
     return render_template('game.html')
 
+#This is where the magic happens
 @app.route('/start_game', methods=['POST'])
 def start_game():
     players_for_year = eligible_players_prefiltered.copy()
     if players_for_year.empty:
         return jsonify({"error": "No eligible players found for the configured year range."})
+    #Randomly select a player from pre-filtered list
     selected_player_name = random.choice(players_for_year['Player'].unique().tolist())
+    #Create new data frame with players stat history then sort it by year
     player_history_df = players_for_year[players_for_year['Player'] == selected_player_name].copy()
     player_history_df = player_history_df.sort_values(by='Year',  ascending=False)
 
+    #Store player difficulty as a single variable for displaying later
     player_difficulty = player_history_df.iloc[0]['Difficulty']
 
     most_frequent_team = get_most_frequent_with_tiebreaker(player_history_df, 'Tm')
