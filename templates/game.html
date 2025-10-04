@@ -303,9 +303,9 @@
                 const difficulty = data.difficulty;
                 playerDifficultyDiv.textContent = `Difficulty: ${difficulty.toFixed(1)}`;
                 playerDifficultyDiv.className = 'difficulty-badge'; 
-                if (difficulty <= 4.0) {
+                if (difficulty <= 3.5) {
                     playerDifficultyDiv.classList.add('difficulty-easy');
-                } else if (difficulty <= 7.5) {
+                } else if (difficulty <= 7.0) {
                     playerDifficultyDiv.classList.add('difficulty-medium');
                 } else {
                     playerDifficultyDiv.classList.add('difficulty-hard');
