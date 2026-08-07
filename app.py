@@ -1,5 +1,8 @@
 import os
+import hashlib
 import random
+from datetime import date, datetime
+from zoneinfo import ZoneInfo
 import pandas as pd
 from flask import Flask, jsonify, request, session, render_template
 #Above lines import py classes needed. os for file paths and flask for hosting webapp
@@ -49,7 +52,9 @@ team_info = {
 #Check if combined stats file already exists to avoid repeating data processing
 if os.path.exists(processed_data_path):
     print("Loading data from cached file...")
-    combined_df = pd.read_csv(processed_data_path)
+    #keep_default_na/na_values guard against pandas re-reading our own literal "N/A" strings
+    #(e.g. Conference/Division for multi-team "2TM" seasons) back in as real NaN floats
+    combined_df = pd.read_csv(processed_data_path, keep_default_na=False, na_values=[''])
     print("Data loaded instantly!")
 else:
     #Take individual yearly stats files and combine into one large combined csv file
@@ -171,6 +176,37 @@ if eligible_players_prefiltered.empty:
     print(f"Warning: No eligible players found for starting year {EARLIEST_YEAR}.")
 print(f"All eligible players pre-filtered and stored!")
 
+#Daily game setup: split eligible players into three balanced difficulty tiers and
+#build a deterministic per-tier rotation so every visitor sees the same players on a
+#given calendar day, with no repeats until a tier's whole pool has been used.
+GAME_TZ = ZoneInfo("America/New_York")
+EPOCH_DATE = date(2024, 1, 1)
+ROUND_TIERS = ['easy', 'hard']
+TIER_LABELS = {'easy': 'Easy', 'hard': 'Hard'}
+FAIL_PENALTY = 5
+
+def today_str():
+    return datetime.now(GAME_TZ).date().isoformat()
+
+def deterministic_shuffle(players, salt):
+    return sorted(players, key=lambda p: hashlib.md5(f"{p}|{salt}".encode()).hexdigest())
+
+player_difficulty_df = eligible_players_prefiltered.drop_duplicates('Player')[['Player', 'Difficulty']].dropna(subset=['Difficulty'])
+player_difficulty_df = player_difficulty_df.sort_values('Difficulty').reset_index(drop=True)
+_n = len(player_difficulty_df)
+_mid = _n // 2
+TIER_POOLS = {
+    'easy': player_difficulty_df.iloc[:_mid]['Player'].tolist(),
+    'hard': player_difficulty_df.iloc[_mid:]['Player'].tolist(),
+}
+TIER_ROTATIONS = {tier: deterministic_shuffle(players, tier) for tier, players in TIER_POOLS.items()}
+
+#Dev-only override so local testing isn't locked to the same 2 players all day (see /dev/new_game)
+def get_daily_player(tier, game_date, seed_override=None):
+    rotation = TIER_ROTATIONS[tier]
+    day_index = seed_override if seed_override is not None else (game_date - EPOCH_DATE).days
+    return rotation[day_index % len(rotation)]
+
 #If a player has played for different teams for same amount of seasons, tiebreaker goes to recent.
 #This function is called within the game routes
 def get_most_frequent_with_tiebreaker(df, column):
@@ -193,6 +229,95 @@ def get_most_frequent_with_tiebreaker(df, column):
 
 #Start of API endpoints. These are the routes called by the front end javascript
 
+#Builds the position/stats/hints payload for a given player without touching session state
+def get_player_payload(selected_player_name):
+    player_history_df = eligible_players_prefiltered[eligible_players_prefiltered['Player'] == selected_player_name].copy()
+    player_history_df = player_history_df.sort_values(by='Year', ascending=False)
+    player_difficulty = player_history_df.iloc[0]['Difficulty']
+    most_frequent_team = get_most_frequent_with_tiebreaker(player_history_df, 'Tm')
+    team_details = team_info.get(most_frequent_team, {})
+    consistent_conference = team_details.get('conf', 'N/A')
+    consistent_division = team_details.get('div', 'N/A')
+    selected_player_position = player_history_df.iloc[0]['FantPos']
+    rookie_year = int(player_history_df.iloc[0]['FirstYear']) if 'FirstYear' in player_history_df.columns else None
+    all_columns = ['Year', 'FantPos', 'Tm', 'Conference', 'Division', 'G', 'PPR_Rank_by_Pos', 'PPR', 'PassYds', 'PassTD', 'RushYds', 'RushTD', 'Rec', 'RecYds', 'RecTD']
+    columns_to_show = [col for col in all_columns if col in player_history_df.columns]
+    stats_json = player_history_df[columns_to_show].to_dict('records')
+    return {
+        'position': selected_player_position,
+        'stats': stats_json,
+        'difficulty': player_difficulty,
+        'hints': {'conference': consistent_conference, 'division': consistent_division, 'team': most_frequent_team},
+        'last_name': selected_player_name.lower().split()[-1],
+        'rookie_year': rookie_year,
+    }
+
+#Resets round progress whenever the calendar day (in GAME_TZ) has rolled over
+def ensure_daily_session():
+    today = today_str()
+    if session.get('game_date') != today:
+        session['game_date'] = today
+        session['round_index'] = 0
+        session['round_results'] = []
+        for key in ['correct_player_name', 'correct_player_display', 'guesses_remaining', 'correct_last_name', 'hints', 'current_tier', 'current_position', 'dev_seed']:
+            session.pop(key, None)
+
+def begin_round(player_name, tier):
+    info = get_player_payload(player_name)
+    session['correct_player_name'] = player_name.lower()
+    session['correct_player_display'] = player_name
+    session['correct_last_name'] = info['last_name']
+    session['guesses_remaining'] = 4
+    session['hints'] = info['hints']
+    session['current_tier'] = tier
+    session['current_position'] = info['position']
+    return {
+        'tier': tier,
+        'round_number': ROUND_TIERS.index(tier) + 1,
+        'total_rounds': len(ROUND_TIERS),
+        'position': info['position'],
+        'stats': info['stats'],
+        'difficulty': info['difficulty'],
+        'rookie_year': info['rookie_year'],
+        'guesses_left': 4,
+        'resumed': False,
+    }
+
+#Rebuilds the current round's payload without re-rolling or resetting guesses (used on page refresh)
+def resume_round():
+    tier = session['current_tier']
+    info = get_player_payload(session['correct_player_display'])
+    return {
+        'tier': tier,
+        'round_number': ROUND_TIERS.index(tier) + 1,
+        'total_rounds': len(ROUND_TIERS),
+        'position': info['position'],
+        'stats': info['stats'],
+        'difficulty': info['difficulty'],
+        'rookie_year': info['rookie_year'],
+        'guesses_left': session.get('guesses_remaining', 4),
+        'resumed': True,
+    }
+
+def complete_round(solved, score):
+    tier = session.get('current_tier')
+    round_results = session.get('round_results', [])
+    round_results.append({'tier': tier, 'label': TIER_LABELS.get(tier, tier), 'score': score, 'solved': solved})
+    session['round_results'] = round_results
+    session['round_index'] = session.get('round_index', 0) + 1
+    for key in ['correct_player_name', 'correct_player_display', 'guesses_remaining', 'correct_last_name', 'hints', 'current_tier', 'current_position']:
+        session.pop(key, None)
+    daily_complete = session['round_index'] >= len(ROUND_TIERS)
+    return {
+        'round_complete': True,
+        'daily_complete': daily_complete,
+        'next_tier': ROUND_TIERS[session['round_index']] if not daily_complete else None,
+        'total_rounds': len(ROUND_TIERS),
+        'round_results': round_results,
+        'total_score': sum(r['score'] for r in round_results),
+        'date': session['game_date'],
+    }
+
 #Render and return Landing Page html
 @app.route('/')
 def home():
@@ -201,52 +326,65 @@ def home():
 #Render and return Game html
 @app.route('/game')
 def game_page():
-    return render_template('game.html')
+    return render_template('game.html', dev_mode=app.debug)
+
+#Tells the frontend where the player is in today's game so a refresh resumes correctly
+@app.route('/daily_status', methods=['GET'])
+def daily_status():
+    ensure_daily_session()
+    round_index = session.get('round_index', 0)
+    round_results = session.get('round_results', [])
+    is_complete = round_index >= len(ROUND_TIERS)
+    return jsonify({
+        'date': session['game_date'],
+        'round_index': round_index,
+        'current_tier': ROUND_TIERS[round_index] if not is_complete else None,
+        'total_rounds': len(ROUND_TIERS),
+        'round_results': round_results,
+        'total_score': sum(r['score'] for r in round_results),
+        'is_complete': is_complete,
+        'in_progress': 'correct_player_name' in session,
+    })
+
+#Dev-only: start a fresh game with a random day-seed instead of the real date, so local
+#testing isn't locked to the same 2 players until tomorrow. Disabled unless Flask debug is on.
+@app.route('/dev/new_game', methods=['POST'])
+def dev_new_game():
+    if not app.debug:
+        return jsonify({'error': 'not available'}), 404
+    session['game_date'] = today_str()
+    session['dev_seed'] = random.randint(0, 1_000_000)
+    session['round_index'] = 0
+    session['round_results'] = []
+    for key in ['correct_player_name', 'correct_player_display', 'guesses_remaining', 'correct_last_name', 'hints', 'current_tier', 'current_position']:
+        session.pop(key, None)
+    return jsonify({'ok': True})
 
 #This is where the magic happens
 @app.route('/start_game', methods=['POST'])
 def start_game():
-    players_for_year = eligible_players_prefiltered.copy()
-    if players_for_year.empty:
-        return jsonify({"error": "No eligible players found for the configured year range."})
-    #Randomly select a player from pre-filtered list
-    selected_player_name = random.choice(players_for_year['Player'].unique().tolist())
-    #Create new data frame with players stat history then sort it by year
-    player_history_df = players_for_year[players_for_year['Player'] == selected_player_name].copy()
-    player_history_df = player_history_df.sort_values(by='Year',  ascending=False)
-
-    #Store player difficulty as a single variable for displaying later
-    player_difficulty = player_history_df.iloc[0]['Difficulty']
-
-    most_frequent_team = get_most_frequent_with_tiebreaker(player_history_df, 'Tm')
-    team_details = team_info.get(most_frequent_team, {})
-    consistent_conference = team_details.get('conf', 'N/A')
-    consistent_division = team_details.get('div', 'N/A')
-    selected_player_position = player_history_df.iloc[0]['FantPos']
-    all_columns = ['Year', 'FantPos', 'G', 'PPR_Rank_by_Pos', 'PPR', 'PassYds', 'PassTD', 'RushYds', 'RushTD', 'Rec', 'RecYds', 'RecTD']
-    columns_to_show = [col for col in all_columns if col in player_history_df.columns]
-    display_df = player_history_df[columns_to_show]
-    stats_json = display_df.to_dict('records')
-    session['correct_player_name'] = selected_player_name.lower()
-    session['correct_player'] = player_history_df.iloc[0].to_dict()
-    session['guesses_remaining'] = 4
-    session['correct_last_name'] = selected_player_name.lower().split()[-1]
-    session['hints'] = {
-        'conference': consistent_conference,
-        'division': consistent_division,
-        'team': most_frequent_team
-    }
-    return jsonify({
-        'position': selected_player_position, 
-        'stats': stats_json,
-        'difficulty': player_difficulty
-    })
+    ensure_daily_session()
+    round_index = session.get('round_index', 0)
+    if round_index >= len(ROUND_TIERS):
+        round_results = session.get('round_results', [])
+        return jsonify({
+            'error': 'daily_complete',
+            'round_results': round_results,
+            'total_score': sum(r['score'] for r in round_results),
+        })
+    tier = ROUND_TIERS[round_index]
+    #If this round is already in progress (e.g. page refresh), resume it instead of re-rolling a player
+    if session.get('current_tier') == tier and 'correct_player_name' in session:
+        return jsonify(resume_round())
+    game_date = date.fromisoformat(session['game_date'])
+    player_name = get_daily_player(tier, game_date, seed_override=session.get('dev_seed'))
+    return jsonify(begin_round(player_name, tier))
 
 @app.route('/suggest_players', methods=['POST'])
 def suggest_players():
     data = request.get_json()
     query = data.get('query', '').strip().lower()
-    position = session.get('correct_player', {}).get('FantPos')
+    position = session.get('current_position')
     if not query or len(query) < 2 or not position:
         return jsonify([])
     filtered_df = eligible_players_prefiltered[
@@ -266,8 +404,13 @@ def handle_guess():
     if guess == session['correct_player_name'] or guess_last_name == correct_last_name:
         correct_name = session['correct_player_name'].title()
         guesses_taken = 4 - session.get('guesses_remaining', 0) + 1
-        session.pop('guesses_remaining', None)
-        return jsonify({'result': 'correct', 'message': f"🎉 Correct! The player is **{correct_name}**.", 'guesses_taken': guesses_taken})
+        round_info = complete_round(solved=True, score=guesses_taken)
+        return jsonify({
+            **round_info,
+            'result': 'correct',
+            'message': f"🎉 Correct! The player is **{correct_name}**.",
+            'guesses_taken': guesses_taken,
+        })
     else:
         session['guesses_remaining'] -= 1
         tries_left = session['guesses_remaining']
@@ -279,28 +422,34 @@ def handle_guess():
                 hint = f"Hint: This player spent most of their seasons in the **{session['hints']['conference']} {session['hints']['division']}**."
             elif tries_left == 1:
                 hint = f"Hint: This player spent most of their seasons with **{session['hints']['team']}**."
-            
+
             return jsonify({
-                'result': 'incorrect', 
-                'message': "❌ Incorrect guess.", 
-                'hint': hint, 
+                'result': 'incorrect',
+                'message': "❌ Incorrect guess.",
+                'hint': hint,
                 'guesses_left': tries_left,
                 'is_last_guess': tries_left == 1
             })
         else:
-            final_message = f"❌ Out of guesses! The correct player was **{session['correct_player_name'].title()}**."
-            session.pop('guesses_remaining', None)
-            return jsonify({'result': 'out_of_guesses', 'message': final_message, 'guesses_taken': 4})
+            correct_name = session['correct_player_name'].title()
+            round_info = complete_round(solved=False, score=FAIL_PENALTY)
+            final_message = f"❌ Out of guesses! The correct player was **{correct_name}**."
+            return jsonify({
+                **round_info,
+                'result': 'out_of_guesses',
+                'message': final_message,
+                'guesses_taken': 4,
+            })
 
 @app.route('/hint', methods=['POST'])
 def get_hint():
     guesses_left = session.get('guesses_remaining')
     if guesses_left is None or guesses_left <= 1:
         return jsonify({'message': 'You cannot use a hint on your last guess!'}), 400
-    
+
     session['guesses_remaining'] -= 1
     current_guesses = session['guesses_remaining']
-    
+
     hints = session.get('hints')
     hint_message = ""
     if current_guesses == 3:
@@ -309,9 +458,9 @@ def get_hint():
         hint_message = f"Hint: This player spent most of their seasons in the **{hints['conference']} {hints['division']}**."
     elif current_guesses == 1:
         hint_message = f"Hint: This player spent most of their seasons with **{hints['team']}**."
-    
+
     return jsonify({
-        'message': hint_message, 
+        'message': hint_message,
         'guesses_left': current_guesses,
         'is_last_guess': current_guesses == 1
     })
@@ -320,10 +469,15 @@ def get_hint():
 def give_up():
     if 'correct_player_name' not in session:
         return jsonify({"error": "Game not started. Please refresh."}), 400
-        
-    final_message = f"The correct player was **{session['correct_player_name'].title()}**. Better luck next time!"
-    session.pop('guesses_remaining', None)
-    return jsonify({'result': 'out_of_guesses', 'message': final_message, 'guesses_taken': 4})
+    correct_name = session['correct_player_name'].title()
+    round_info = complete_round(solved=False, score=FAIL_PENALTY)
+    final_message = f"The correct player was **{correct_name}**. Better luck next time!"
+    return jsonify({
+        **round_info,
+        'result': 'out_of_guesses',
+        'message': final_message,
+        'guesses_taken': 4,
+    })
 
 if __name__ == '__main__':
     if not os.path.exists('templates'):

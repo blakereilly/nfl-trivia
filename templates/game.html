@@ -6,16 +6,28 @@
     <title>FumbLe - The Game</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg-1: #0b0f14; --bg-2: #1a1f27; --bg-3: #001a33;
+            --accent: #2c7be5; --accent-dark: #1a5bb8;
+            --cyan: #00f2ea; --cyan-dim: rgba(0, 242, 234, 0.35);
+            --card-bg: rgba(38, 43, 51, 0.55);
+            --card-border: rgba(0, 242, 234, 0.12);
+            --row-bg: rgba(22, 26, 32, 0.65);
+            --text: #f5f7fa; --text-dim: #9aa5b1; --text-faint: #6b7480;
+            --success: #3ecf6e; --warning: #f5b942; --danger: #f4573f;
+            --radius-lg: 18px; --radius-md: 12px; --radius-sm: 8px;
+            --shadow-card: 0 10px 40px 0 rgba(0, 0, 0, 0.45), 0 0 20px rgba(0, 242, 234, 0.08);
+        }
         * { box-sizing: border-box; }
         html, body {
             margin: 0; padding: 0; width: 100%;
-            font-family: 'Inter', sans-serif; 
-            background: linear-gradient(135deg, #0d1218, #1f232b, #001a33);
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--bg-1), var(--bg-2), var(--bg-3));
             background-size: 400% 400%;
-            animation: gradientBG 15s ease infinite;
-            color: #f5f5f5;
+            animation: gradientBG 18s ease infinite;
+            color: var(--text);
             min-height: 100%;
         }
         @keyframes gradientBG {
@@ -29,141 +41,220 @@
             padding: 20px; overflow-x: hidden;
         }
         .page-header {
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: absolute;
-            top: 0;
-            left: 0;
-            padding: 10px 25px;
-            z-index: 10;
+            width: 100%; max-width: 1200px;
+            display: flex; justify-content: space-between; align-items: center;
+            position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+            padding: 16px 25px; z-index: 10;
         }
         .page-header h1 {
-            font-size: 2.2rem;
-            margin: 0;
-            text-shadow: 0 0 10px rgba(0, 242, 234, 0.5), 0 0 20px rgba(0, 242, 234, 0.3);
+            font-size: 2rem; font-weight: 800; margin: 0; letter-spacing: -0.5px;
+            text-shadow: 0 0 10px var(--cyan-dim), 0 0 24px rgba(0, 242, 234, 0.25);
         }
-        .header-buttons {
-            display: flex;
-            gap: 10px;
-        }
+        .header-buttons { display: flex; gap: 8px; }
+
         .main-content {
             display: flex; flex-direction: column; align-items: center;
-            width: 100%; max-width: 1200px; text-align: center;
-            background: rgba(42, 46, 52, 0.5);
-            backdrop-filter: blur(12px);
-            border-radius: 16px;
-            padding: 20px 30px; /* Reduced vertical padding */
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37), 0 0 15px rgba(0, 242, 234, 0.1);
+            width: 100%; max-width: 620px; text-align: center;
+            background: var(--card-bg);
+            backdrop-filter: blur(14px);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-lg);
+            padding: 24px 28px;
+            box-shadow: var(--shadow-card);
+            margin-top: 70px;
         }
+        #gameView, #resultsView { width: 100%; min-width: 0; }
+
+        /* Round stepper */
+        .round-stepper {
+            display: flex; align-items: center; justify-content: center;
+            gap: 6px; width: 100%; margin-bottom: 18px; visibility: hidden;
+        }
+        .step {
+            display: flex; align-items: center; gap: 8px; flex: 1;
+        }
+        .step-dot {
+            width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px; font-weight: 700;
+            background: rgba(255,255,255,0.06); color: var(--text-faint);
+            border: 2px solid rgba(255,255,255,0.12);
+            transition: all 0.3s ease;
+        }
+        .step-label {
+            font-size: 12px; font-weight: 600; color: var(--text-faint);
+            text-transform: uppercase; letter-spacing: 0.5px;
+            transition: color 0.3s ease;
+        }
+        .step-line {
+            flex: 1; height: 2px; background: rgba(255,255,255,0.1);
+            margin: 0 2px;
+        }
+        .step.current .step-dot {
+            border-color: var(--cyan); color: var(--cyan);
+            box-shadow: 0 0 12px var(--cyan-dim);
+        }
+        .step.current .step-label { color: var(--text); }
+        .step.done-solved .step-dot { background: var(--success); border-color: var(--success); color: #06210f; }
+        .step.done-solved .step-label { color: var(--success); }
+        .step.done-failed .step-dot { background: var(--danger); border-color: var(--danger); color: #2a0704; }
+        .step.done-failed .step-label { color: var(--danger); }
+
         .player-info-container {
             display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
-            gap: 10px 20px;
-            margin: 0 0 15px 0; /* Reduced bottom margin */
-            visibility: hidden;
+            gap: 10px 20px; margin: 0 0 14px 0; visibility: hidden;
         }
-        #playerPosition { font-size: 18px; font-weight: 600; }
+        #playerPosition, #playerRookie { font-size: 16px; font-weight: 600; margin: 0; color: var(--text-dim); }
         .position-badge {
-            display: inline-block; background-color: #2c7be5; color: #ffffff;
-            padding: 5px 8px; border-radius: 12px; font-size: 18px;
-            margin-left: 8px; vertical-align: middle;
+            display: inline-block; background-color: var(--accent); color: #fff;
+            padding: 4px 10px; border-radius: 10px; font-size: 15px; font-weight: 700;
+            margin-left: 6px; vertical-align: middle;
         }
         .difficulty-badge {
-            padding: 6px 14px; border-radius: 12px; font-size: 1.2rem;
-            font-weight: 600;
-            margin-top: 15px; /* Reduced top margin */
+            padding: 5px 12px; border-radius: 10px; font-size: 1rem; font-weight: 700;
             visibility: hidden;
         }
-        .difficulty-easy { background-color: #4CAF50; color: white; }
-        .difficulty-medium { background-color: #FFC107; color: #1a1e24; }
-        .difficulty-hard { background-color: #F44336; color: white; }
+        .difficulty-easy { background-color: var(--success); color: #06210f; }
+        .difficulty-medium { background-color: var(--warning); color: #2a1f04; }
+        .difficulty-hard { background-color: var(--danger); color: #2a0704; }
 
         .game-controls {
-            display: flex; flex-direction: column; align-items: center; margin-bottom: 10px; width: 100%; max-width: 350px;
-            gap: 10px;
+            display: flex; flex-direction: column; align-items: center; margin-bottom: 8px;
+            width: 100%; max-width: 380px; gap: 10px;
         }
         .table-container {
-            overflow-x: auto; width: 100%; margin: 10px 0; /* Reduced vertical margin */
-            border-radius: 12px;
-            border: 1px solid rgba(0, 242, 234, 0.1);
+            overflow-x: auto; width: 100%; min-width: 0; max-width: 100%; margin: 14px 0;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--card-border);
+            position: relative;
+            -webkit-overflow-scrolling: touch;
         }
-        #statsTable { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 600px; }
-        #statsTable th, #statsTable td { border: none; border-bottom: 1px solid #2a2e34; padding: 14px; white-space: nowrap; text-align: center; }
-        #statsTable th { background-color: #2c7be5; color: white; font-weight: 600; }
-        #statsTable th:first-child { border-radius: 12px 0 0 0; }
-        #statsTable th:last-child { border-radius: 0 12px 0 0; }
-        #statsTable tr:last-child td:first-child { border-radius: 0 0 0 12px; }
-        #statsTable tr:last-child td:last-child { border-radius: 0 0 12px 0; }
-        #statsTable tr:nth-child(even) { background-color: rgba(26, 30, 36, 0.7); }
+        .table-container.has-overflow::after {
+            content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 28px;
+            background: linear-gradient(to right, transparent, rgba(11, 15, 20, 0.85));
+            pointer-events: none; border-radius: 0 var(--radius-md) var(--radius-md) 0;
+        }
+        .scroll-hint {
+            font-size: 11px; color: var(--text-faint); margin: -6px 0 6px 0; display: none;
+        }
+        .table-container.has-overflow ~ .scroll-hint { display: block; }
+        #statsTable { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 560px; }
+        #statsTable th, #statsTable td { border: none; border-bottom: 1px solid rgba(255,255,255,0.06); padding: 12px 10px; white-space: nowrap; text-align: center; }
+        #statsTable th { background-color: var(--accent); color: white; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.3px; }
+        @media (max-width: 480px) {
+            #statsTable { font-size: 12px; min-width: 460px; }
+            #statsTable th, #statsTable td { padding: 8px 6px; }
+            #statsTable th { font-size: 10px; }
+            .team-sub { font-size: 9px; }
+        }
+        #statsTable th:first-child { border-radius: var(--radius-md) 0 0 0; }
+        #statsTable th:last-child { border-radius: 0 var(--radius-md) 0 0; }
+        #statsTable tr:last-child td:first-child { border-radius: 0 0 0 var(--radius-md); }
+        #statsTable tr:last-child td:last-child { border-radius: 0 0 var(--radius-md) 0; }
+        #statsTable tr:nth-child(even) { background-color: var(--row-bg); }
         #statsTable tr { transition: background-color 0.2s ease; }
-        #statsTable tr:hover { background-color: #1f232b; }
-        .highlight-green { background-color: #4CAF50 !important; color: white !important; font-weight: 600; }
-        .highlight-yellow { background-color: #FFC107 !important; color: #1a1e24 !important; font-weight: 600; }
-        .highlight-red { background-color: #F44336 !important; color: white !important; font-weight: 600; }
-        
-        input, button { padding: 12px; font-size: 16px; margin: 5px; border-radius: 8px; border: none; width: 100%; transition: all 0.3s ease; }
-        button { background-color: #2c7be5; color: white; cursor: pointer; font-weight: 600; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); }
-        button:hover:not(:disabled) { background-color: #1a5bb8; transform: translateY(-3px); box-shadow: 0 6px 20px rgba(44, 123, 229, 0.4), 0 0 15px rgba(44, 123, 229, 0.5); }
-        button:disabled { background-color: #555; cursor: not-allowed; color: #999; border-color: #555; }
-        
-        .hint-button { background-color: transparent; border: 2px solid #2c7be5; color: #2c7be5; }
-        .hint-button:hover:not(:disabled) { background-color: #2c7be5; color: white; }
-        input[type="text"] { background-color: #2a2e34; color: #f5f5f5; border: 1px solid #444; }
-        input[type="text"]:focus { outline: none; border-color: #00f2ea; box-shadow: 0 0 8px rgba(0, 242, 234, 0.5); }
-        
-        #instruction-text { font-size: 18px; min-height: 25px; font-weight: 600; visibility: hidden; margin-bottom: 5px; }
-        #feedback { margin-top: 10px; font-size: 18px; min-height: 25px; font-weight: 600; transition: color 0.4s ease-in-out; }
-        #feedback.correct-guess { color: #4CAF50; }
-        #feedback.incorrect-guess { color: #F44336; }
-        #guesses-left-display { font-size: 1.1rem; color: #FFC107; font-weight: 600; margin-top: 5px; min-height: 20px; }
+        #statsTable tr:hover { background-color: rgba(44, 123, 229, 0.12); }
+        .highlight-green { background-color: var(--success) !important; color: #06210f !important; font-weight: 700; }
+        .highlight-yellow { background-color: var(--warning) !important; color: #2a1f04 !important; font-weight: 700; }
+        .highlight-red { background-color: var(--danger) !important; color: #2a0704 !important; font-weight: 700; }
+        .team-sub { display: block; font-size: 10px; font-weight: 500; color: var(--text-faint); margin-top: 2px; }
+        .team-sub:empty { display: none; margin-top: 0; }
 
-        .input-submit-container { display: flex; width: 100%; gap: 5px; align-items: flex-start; }
+        input, button { padding: 12px; font-size: 15px; margin: 0; border-radius: var(--radius-sm); border: none; width: 100%; transition: all 0.2s ease; font-family: inherit; }
+        button { background-color: var(--accent); color: white; cursor: pointer; font-weight: 700; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); }
+        button:hover:not(:disabled) { background-color: var(--accent-dark); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(44, 123, 229, 0.4), 0 0 15px rgba(44, 123, 229, 0.4); }
+        button:disabled { background-color: #444; cursor: not-allowed; color: #888; }
+
+        .hint-button { background-color: transparent; border: 2px solid var(--accent); color: var(--accent); padding: 10px; }
+        .hint-button:hover:not(:disabled) { background-color: var(--accent); color: white; }
+        input[type="text"] { background-color: rgba(20,24,30,0.8); color: var(--text); border: 1px solid rgba(255,255,255,0.12); }
+        input[type="text"]:focus { outline: none; border-color: var(--cyan); box-shadow: 0 0 8px var(--cyan-dim); }
+
+        #instruction-text { font-size: 16px; min-height: 22px; font-weight: 600; visibility: hidden; margin: 0 0 10px 0; color: var(--text-dim); }
+        #feedback { margin-top: 10px; font-size: 16px; min-height: 22px; font-weight: 600; transition: color 0.3s ease; line-height: 1.5; }
+        #feedback.correct-guess { color: var(--success); }
+        #feedback.incorrect-guess { color: var(--danger); }
+        #feedback.hint-message { color: var(--cyan); }
+        #guesses-left-display { font-size: 1rem; color: var(--warning); font-weight: 700; margin-top: 4px; min-height: 18px; }
+
+        .input-submit-container { display: flex; width: 100%; gap: 6px; align-items: flex-start; }
         .autocomplete-container { position: relative; flex-grow: 1; }
-        #guessButton { width: auto; flex-shrink: 0; padding-left: 25px; padding-right: 25px; }
+        #guessButton { width: auto; flex-shrink: 0; padding-left: 22px; padding-right: 22px; }
 
         #rules-button, #share-link-button {
-            background: none; border: none; color: #aaa; cursor: pointer; padding: 5px;
-            width: auto; transition: all 0.3s ease;
+            background: none; border: none; color: var(--text-dim); cursor: pointer; padding: 6px;
+            width: auto; transition: all 0.2s ease;
         }
-        #rules-button { font-weight: bold; font-size: 24px; }
-        #rules-button:hover, #share-link-button:hover {
-            color: #fff; transform: scale(1.1); background: transparent; box-shadow: none;
-        }
+        #rules-button { font-weight: 800; font-size: 20px; border: 2px solid rgba(255,255,255,0.15); border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; }
+        #rules-button:hover, #share-link-button:hover { color: #fff; transform: scale(1.08); background: transparent; box-shadow: none; }
         #share-link-button svg { vertical-align: middle; }
 
-        #copyright-notice, #data-source { position: absolute; font-size: 12px; color: #888; }
-        #copyright-notice { bottom: 20px; left: 20px; z-index: 1000; font-weight: 600; }
-        #data-source { bottom: 10px; right: 10px; font-size: 10px; }
-        #data-source a { color: #2c7be5; text-decoration: none; }
-        
-        .modal { display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(5px); align-items: center; justify-content: center; }
+        .next-round-panel { display: none; flex-direction: column; align-items: center; gap: 10px; width: 100%; max-width: 380px; margin-top: 8px; }
+        .next-round-panel.active { display: flex; }
+        #nextRoundButton { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); }
+
+        #copyright-notice, #data-source { position: fixed; font-size: 12px; color: var(--text-faint); }
+        #copyright-notice { bottom: 16px; left: 20px; z-index: 5; font-weight: 600; }
+        #data-source { bottom: 8px; right: 10px; font-size: 10px; }
+        #data-source a { color: var(--accent); text-decoration: none; }
+
+        .modal { display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.65); backdrop-filter: blur(6px); align-items: center; justify-content: center; padding: 20px; }
         .modal.active { display: flex; }
-        .modal-content { background: rgba(30, 35, 41, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); padding: 30px; width: 90%; max-width: 500px; border-radius: 16px; position: relative; color: white; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); text-align: center; }
-        .close-button { color: #aaa; position: absolute; top: 10px; right: 15px; font-size: 28px; font-weight: bold; cursor: pointer; }
-        
+        .modal-content { background: rgba(26, 31, 39, 0.9); border: 1px solid var(--card-border); padding: 28px; width: 100%; max-width: 460px; border-radius: var(--radius-lg); position: relative; color: white; box-shadow: var(--shadow-card); text-align: center; }
+        .modal-content h2 { margin-top: 4px; }
+        .close-button { color: var(--text-dim); position: absolute; top: 10px; right: 15px; font-size: 26px; font-weight: bold; cursor: pointer; }
+        .close-button:hover { color: #fff; }
+
+        .rules-list { text-align: left; font-size: 14.5px; line-height: 1.7; color: var(--text-dim); }
+        .rules-list b { color: var(--text); }
+
         .share-link-input-container { display: flex; width: 100%; margin-top: 15px; }
-        #share-url-input { flex-grow: 1; background-color: #1a1e24; color: #f5f5f5; border: 1px solid #444; border-radius: 8px 0 0 8px; padding: 10px; font-size: 14px; margin: 0; }
-        #copy-url-button { flex-shrink: 0; width: auto; border-radius: 0 8px 8px 0; margin: 0; font-size: 14px; padding: 10px 15px; }
+        #share-url-input { flex-grow: 1; background-color: rgba(20,24,30,0.8); color: var(--text); border: 1px solid rgba(255,255,255,0.12); border-radius: var(--radius-sm) 0 0 var(--radius-sm); padding: 10px; font-size: 14px; margin: 0; }
+        #copy-url-button { flex-shrink: 0; width: auto; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; margin: 0; font-size: 14px; padding: 10px 15px; }
 
-        #suggestions { position: absolute; z-index: 99; background-color: #1a1e24; color: #f5f5f5; border: 1px solid #444; border-top: none; width: 100%; max-height: 200px; overflow-y: auto; text-align: left; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); border-radius: 0 0 8px 8px; display: none; }
-        #suggestions div { padding: 10px; cursor: pointer; }
-        #suggestions div:hover { background-color: #2c7be5; }
+        #suggestions { position: absolute; z-index: 99; background-color: rgba(20,24,30,0.97); color: var(--text); border: 1px solid rgba(255,255,255,0.12); border-top: none; width: 100%; max-height: 200px; overflow-y: auto; text-align: left; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.3); border-radius: 0 0 var(--radius-sm) var(--radius-sm); display: none; }
+        #suggestions div { padding: 10px 12px; cursor: pointer; font-size: 14px; }
+        #suggestions div:hover { background-color: var(--accent); }
 
-        .loader { border: 4px solid rgba(243, 243, 243, 0.3); border-top: 4px solid #00f2ea; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
+        .loader { border: 4px solid rgba(243, 243, 243, 0.15); border-top: 4px solid var(--cyan); border-radius: 50%; width: 40px; height: 40px; animation: spin 0.9s linear infinite; margin: 24px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .fade-in { animation: fadeIn 0.8s ease-in-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-        
-        #share-grid { font-size: 2rem; margin: 20px 0; letter-spacing: 5px; }
-        .share-buttons { display: flex; gap: 10px; justify-content: center; }
+        .fade-in { animation: fadeIn 0.5s ease-in-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        .pop-in { animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+        @keyframes popIn { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
+        @keyframes shake { 10%, 90% { transform: translateX(-2px); } 20%, 80% { transform: translateX(3px); } 30%, 50%, 70% { transform: translateX(-5px); } 40%, 60% { transform: translateX(5px); } }
+        .shake { animation: shake 0.5s; }
 
-        @media (max-width: 768px) {
-            .page-wrapper { padding-top: 80px; justify-content: flex-start; }
-            .main-content { padding: 20px; }
-            .page-header h1 { font-size: 2rem; }
-            #copyright-notice { position: fixed; bottom: 10px; left: 10px; }
-            #data-source { position: fixed; bottom: 5px; right: 5px; font-size: 8px; }
+        /* Results / share grid */
+        .score-summary { font-size: 2.4rem; font-weight: 800; margin: 6px 0 2px 0; }
+        .score-summary span { font-size: 1rem; font-weight: 600; color: var(--text-dim); display: block; }
+        .results-rows { display: flex; flex-direction: column; gap: 8px; margin: 18px 0; }
+        .result-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 14px; border-radius: var(--radius-sm);
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+            font-size: 14.5px; font-weight: 600;
+        }
+        .result-row .rr-tier { display: flex; align-items: center; gap: 8px; }
+        .result-row .rr-tier-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .result-row.tier-easy .rr-tier-dot { background: var(--success); }
+        .result-row.tier-medium .rr-tier-dot { background: var(--warning); }
+        .result-row.tier-hard .rr-tier-dot { background: var(--danger); }
+        .result-row .rr-score.solved { color: var(--success); }
+        .result-row .rr-score.failed { color: var(--danger); }
+
+        .streak-line { font-size: 14px; color: var(--text-dim); margin: 4px 0 0 0; }
+        .countdown-line { font-size: 13px; color: var(--text-faint); margin: 4px 0 16px 0; }
+        .share-buttons { display: flex; gap: 10px; justify-content: center; margin-top: 6px; }
+
+        @media (max-width: 640px) {
+            .page-wrapper { padding-top: 76px; justify-content: flex-start; }
+            .main-content { padding: 20px 16px; margin-top: 0; }
+            .page-header { padding: 12px 16px; }
+            .page-header h1 { font-size: 1.7rem; }
+            .step-label { display: none; }
+            #copyright-notice { position: fixed; bottom: 8px; left: 12px; font-size: 10px; }
+            #data-source { position: fixed; bottom: 4px; right: 8px; font-size: 8px; }
         }
     </style>
 </head>
@@ -173,41 +264,97 @@
             <h1>FumbLe</h1>
             <div class="header-buttons">
                 <button id="rules-button">?</button>
-                <button id="share-link-button">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                <button id="share-link-button" title="Share FumbLe">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
                 </button>
             </div>
         </header>
-        
-        <div class="main-content">
-            <div id="loader" class="loader" style="display: none;"></div>
-            
-            <p id="instruction-text"></p>
-            <div class="game-controls" style="visibility: hidden;">
-                <div class="input-submit-container">
-                    <div class="autocomplete-container">
-                        <input type="text" id="guessInput" placeholder="Enter player name" disabled>
-                        <div id="suggestions"></div>
-                    </div>
-                    <button id="guessButton" disabled>Go</button>
-                </div>
-                <button id="hintButton" class="hint-button" disabled>Get Hint</button>
-            </div>
-            <p id="feedback"></p>
 
-            <p id="guesses-left-display" style="display: none;"></p> 
-            <div class="player-info-container">
-                <p id="playerPosition"></p>
+        <div class="main-content">
+            <div id="loader" class="loader"></div>
+
+            <div class="round-stepper" id="roundStepper">
+                <div class="step" data-tier="easy"><span class="step-dot">1</span><span class="step-label">Easy</span></div>
+                <div class="step-line"></div>
+                <div class="step" data-tier="hard"><span class="step-dot">2</span><span class="step-label">Hard</span></div>
             </div>
-            <div class="table-container" style="visibility: hidden;">
-                <table id="statsTable"><thead></thead><tbody></tbody></table>
+            {% if dev_mode %}
+            <button id="devResetButton" class="hint-button" style="max-width:220px; font-size:12px; padding:6px 10px; margin-bottom:10px;">🔄 New Test Game (dev)</button>
+            {% endif %}
+
+            <div id="gameView">
+                <p id="instruction-text"></p>
+                <div class="game-controls" style="visibility: hidden;">
+                    <div class="input-submit-container">
+                        <div class="autocomplete-container">
+                            <input type="text" id="guessInput" placeholder="Enter player name" disabled autocomplete="off">
+                            <div id="suggestions"></div>
+                        </div>
+                        <button id="guessButton" disabled>Go</button>
+                    </div>
+                    <button id="hintButton" class="hint-button" disabled>Get Hint</button>
+                </div>
+                <p id="feedback"></p>
+                <p id="guesses-left-display" style="display: none;"></p>
+
+                <div class="next-round-panel" id="nextRoundPanel">
+                    <button id="nextRoundButton">Next Round ▶</button>
+                </div>
+
+                <div class="player-info-container">
+                    <p id="playerPosition"></p>
+                    <p id="playerRookie"></p>
+                </div>
+                <div class="table-container" style="visibility: hidden;">
+                    <table id="statsTable"><thead></thead><tbody></tbody></table>
+                </div>
+                <p class="scroll-hint">↔ Swipe to see more stats</p>
+                <div id="playerDifficulty" class="difficulty-badge"></div>
             </div>
-            <div id="playerDifficulty" class="difficulty-badge"></div>
+
+            <div id="resultsView" style="display: none;"></div>
         </div>
-        
-        <div id="rulesModal" class="modal"><div class="modal-content"><span id="close-rules-button" class="close-button">&times;</span><h2>How to Play FumbLe</h2><p>1. An NFL player's position and career stats will be displayed. Your goal is to guess their name.</p><p>2. You get 4 guesses. If you are stuck, you can use the "Get Hint" button but it will take away one of your guesses.</p><p>3. The order of hints will be: Conference, Division, then Team.</p><p>4. Share your results with friends!</p><p>Do you know ball?</p></div></div>
-        <div id="shareModal" class="modal"><div class="modal-content"><span id="close-share-button" class="close-button">&times;</span><h2 id="share-title">Results</h2><p id="share-date"></p><div id="share-grid"></div><div class="share-buttons"><button id="share-game-button">Share Game</button><button id="copy-results-button" class="hint-button">Copy Results</button></div></div></div>
-        <div id="shareLinkModal" class="modal"><div class="modal-content"><span id="close-share-link-button" class="close-button">&times;</span><h2>Share FumbLe</h2><p>Share this link with your friends to challenge them!</p><div class="share-link-input-container"><input type="text" id="share-url-input" readonly><button id="copy-url-button">Copy</button></div></div></div>
+
+        <div id="rulesModal" class="modal">
+            <div class="modal-content">
+                <span id="close-rules-button" class="close-button">&times;</span>
+                <h2>How to Play FumbLe</h2>
+                <div class="rules-list">
+                    <p>1. Every day brings <b>2 rounds</b> &mdash; Easy, then Hard. You'll see an NFL player's position and career stats (team, rookie year included); guess who it is.</p>
+                    <p>2. You get <b>4 guesses per round</b>. Stuck? Use "Get Hint" &mdash; it costs a guess, same as a wrong answer.</p>
+                    <p>3. Hints arrive in order: Conference, then Division, then Team.</p>
+                    <p>4. Your <b>daily score</b> is the total guesses/hints used across both rounds &mdash; lower is better. Missing a round costs 5.</p>
+                    <p>5. Everyone gets the same 2 players each day. Share your score and keep your streak alive!</p>
+                    <p>Do you know ball?</p>
+                </div>
+            </div>
+        </div>
+        <div id="shareModal" class="modal">
+            <div class="modal-content">
+                <span id="close-share-button" class="close-button">&times;</span>
+                <h2 id="share-title">Results</h2>
+                <p id="share-date" class="streak-line"></p>
+                <div class="score-summary"><span>Total Score</span><span id="scoreValue" style="font-size:2.4rem; display:block;"></span></div>
+                <div class="results-rows" id="resultsRows"></div>
+                <p class="streak-line" id="streakLine"></p>
+                <p class="countdown-line" id="countdownLine"></p>
+                <div class="share-buttons">
+                    <button id="share-game-button">Share Game</button>
+                    <button id="copy-results-button" class="hint-button">Copy Results</button>
+                </div>
+            </div>
+        </div>
+        <div id="shareLinkModal" class="modal">
+            <div class="modal-content">
+                <span id="close-share-link-button" class="close-button">&times;</span>
+                <h2>Share FumbLe</h2>
+                <p>Send this link to challenge your friends to today's rounds!</p>
+                <div class="share-link-input-container">
+                    <input type="text" id="share-url-input" readonly>
+                    <button id="copy-url-button">Copy</button>
+                </div>
+            </div>
+        </div>
         <p id="copyright-notice">ReillyLabs &copy; 2025</p>
         <p id="data-source">Player Data from <a href="https://www.pro-football-reference.com/" target="_blank">Pro Football Reference</a></p>
     </div>
@@ -220,6 +367,7 @@
         const feedbackP = document.getElementById("feedback");
         const playerInfoContainer = document.querySelector('.player-info-container');
         const playerPositionP = document.getElementById("playerPosition");
+        const playerRookieP = document.getElementById("playerRookie");
         const playerDifficultyDiv = document.getElementById("playerDifficulty");
         const statsTable = document.getElementById("statsTable");
         const suggestionsDiv = document.getElementById("suggestions");
@@ -227,7 +375,12 @@
         const gameControls = document.querySelector('.game-controls');
         const tableContainer = document.querySelector('.table-container');
         const guessesLeftDisplay = document.getElementById('guesses-left-display');
-        
+        const gameView = document.getElementById('gameView');
+        const resultsView = document.getElementById('resultsView');
+        const roundStepper = document.getElementById('roundStepper');
+        const nextRoundPanel = document.getElementById('nextRoundPanel');
+        const nextRoundButton = document.getElementById('nextRoundButton');
+
         const rulesButton = document.getElementById('rules-button');
         const rulesModal = document.getElementById('rulesModal');
         const closeRulesButton = document.getElementById('close-rules-button');
@@ -235,7 +388,10 @@
         const closeShareButton = document.getElementById('close-share-button');
         const shareTitle = document.getElementById('share-title');
         const shareDate = document.getElementById('share-date');
-        const shareGrid = document.getElementById('share-grid');
+        const scoreValue = document.getElementById('scoreValue');
+        const resultsRows = document.getElementById('resultsRows');
+        const streakLine = document.getElementById('streakLine');
+        const countdownLine = document.getElementById('countdownLine');
         const copyResultsButton = document.getElementById('copy-results-button');
         const shareGameButton = document.getElementById('share-game-button');
         const shareLinkButton = document.getElementById('share-link-button');
@@ -245,18 +401,36 @@
         const copyUrlButton = document.getElementById('copy-url-button');
 
         const columnMap = { "Year": "Yr", "G": "Games", "PPR": "PPR Pts", "PPR_Rank_by_Pos": "PPR Rank", "PassYds": "Pass Yd", "PassTD": "Pass TD", "Rec": "Rec", "RecYds": "Rec Yd", "RecTD": "Rec TD", "RushYds": "Rush Yd", "RushTD": "Rush TD", };
+        const TIER_LABELS = { easy: 'Easy', hard: 'Hard' };
+        const TIER_EMOJI = { easy: '🟩', hard: '🟥' };
         let debounceTimeout;
         let shareableText = '';
+        let currentTier = null;
+        let countdownTimer = null;
+        let roundResultsState = [];
+        let totalRoundsState = 2;
+        let currentStatsData = [];
 
-        document.addEventListener('DOMContentLoaded', startGame);
+        const devResetButton = document.getElementById('devResetButton');
+        if (devResetButton) {
+            devResetButton.addEventListener('click', async () => {
+                devResetButton.disabled = true;
+                await fetch('/dev/new_game', { method: 'POST' });
+                devResetButton.disabled = false;
+                init();
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
         guessButton.addEventListener('click', submitGuess);
         hintButton.addEventListener('click', handleHintOrGiveUp);
+        nextRoundButton.addEventListener('click', () => { nextRoundPanel.classList.remove('active'); startRound(); });
         rulesButton.addEventListener('click', () => rulesModal.classList.add('active'));
         closeRulesButton.addEventListener('click', () => rulesModal.classList.remove('active'));
         rulesModal.addEventListener('click', (event) => { if (event.target === rulesModal) rulesModal.classList.remove('active'); });
         closeShareButton.addEventListener('click', () => shareModal.classList.remove('active'));
         copyResultsButton.addEventListener('click', copyResultsToClipboard);
-        shareGameButton.addEventListener('click', () => { shareModal.classList.remove('active'); shareUrlInput.value = window.location.origin; shareLinkModal.classList.add('active'); });
+        shareGameButton.addEventListener('click', () => { shareUrlInput.value = window.location.origin; shareLinkModal.classList.add('active'); });
         guessInput.addEventListener("input", debounce(handleGuessInput, 300));
         guessInput.addEventListener("keydown", function(event) { if (event.key === "Enter") { event.preventDefault(); submitGuess(); }});
         document.body.addEventListener('click', (event) => { if (!event.target.closest('.autocomplete-container')) { suggestionsDiv.style.display = 'none'; } });
@@ -265,86 +439,169 @@
         shareLinkModal.addEventListener('click', (event) => { if (event.target === shareLinkModal) shareLinkModal.classList.remove('active'); });
         copyUrlButton.addEventListener('click', () => { shareUrlInput.select(); shareUrlInput.setSelectionRange(0, 99999); try { document.execCommand('copy'); copyUrlButton.textContent = 'Copied!'; setTimeout(() => { copyUrlButton.textContent = 'Copy'; }, 2000); } catch (err) { console.error('Failed to copy text: ', err); } });
 
-        async function startGame() {
+        // --- Init / daily status ---
+        async function init() {
+            showLoader(true);
+            try {
+                const response = await fetch('/daily_status');
+                const data = await response.json();
+                roundResultsState = data.round_results;
+                renderStepper(data.round_results, data.current_tier);
+                if (data.is_complete) {
+                    showLoader(false);
+                    renderFinalResults({ round_results: data.round_results, total_score: data.total_score, date: data.date });
+                    return;
+                }
+                await startRound();
+            } catch (error) {
+                showLoader(false);
+                feedbackP.textContent = "Failed to load today's game. Please try again.";
+                console.error("Init Error:", error);
+            }
+        }
+
+        function showLoader(visible) {
+            loader.style.display = visible ? 'block' : 'none';
+        }
+
+        // --- Round stepper ---
+        function renderStepper(roundResults, activeTier) {
+            roundStepper.style.visibility = 'visible';
+            const steps = roundStepper.querySelectorAll('.step');
+            steps.forEach(step => {
+                const tier = step.dataset.tier;
+                const dot = step.querySelector('.step-dot');
+                step.classList.remove('current', 'done-solved', 'done-failed');
+                const result = roundResults.find(r => r.tier === tier);
+                if (result) {
+                    step.classList.add(result.solved ? 'done-solved' : 'done-failed');
+                    dot.textContent = result.solved ? '✓' : '✕';
+                } else {
+                    dot.textContent = { easy: '1', hard: '2' }[tier];
+                    if (tier === activeTier) step.classList.add('current');
+                }
+            });
+        }
+
+        // --- Round lifecycle ---
+        async function startRound() {
+            resetRoundUI();
+            showLoader(true);
+            try {
+                const response = await fetch('/start_game', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
+                const data = await response.json();
+                showLoader(false);
+                if (data.error === 'daily_complete') {
+                    renderFinalResults(data);
+                    return;
+                }
+                currentTier = data.tier;
+                totalRoundsState = data.total_rounds || totalRoundsState;
+                renderStepper(roundResultsState, currentTier);
+
+                playerPositionP.innerHTML = `Position: <span class="position-badge">${data.position}</span>`;
+                playerRookieP.textContent = data.rookie_year ? `Rookie Season: ${data.rookie_year}` : '';
+                playerDifficultyDiv.textContent = `${TIER_LABELS[data.tier]} · Difficulty ${data.difficulty.toFixed(1)}`;
+                playerDifficultyDiv.className = `difficulty-badge difficulty-${data.tier}`;
+
+                currentStatsData = data.stats;
+                renderTable(data.stats);
+                updateTeamReveal(data.guesses_left);
+                instructionTextP.textContent = `Round ${data.round_number} of ${totalRoundsState}: Guess the player based on their career stats`;
+
+                guessInput.value = "";
+                guessInput.disabled = false;
+                guessButton.disabled = false;
+                hintButton.disabled = false;
+                hintButton.textContent = 'Get Hint';
+                statsTable.style.display = 'table';
+
+                if (data.resumed && data.guesses_left < 4) {
+                    guessesLeftDisplay.textContent = `Guesses Left: ${data.guesses_left}`;
+                    guessesLeftDisplay.style.display = 'block';
+                }
+
+                revealGameUI();
+            } catch (error) {
+                showLoader(false);
+                feedbackP.textContent = "Failed to start the round. Please try again.";
+                console.error("Start Round Error:", error);
+            }
+        }
+
+        function resetRoundUI() {
             instructionTextP.textContent = "";
             instructionTextP.style.visibility = 'hidden';
             instructionTextP.classList.remove('fade-in');
             feedbackP.textContent = "";
+            feedbackP.classList.remove('correct-guess', 'incorrect-guess', 'shake');
             playerDifficultyDiv.style.visibility = 'hidden';
             playerDifficultyDiv.classList.remove('fade-in');
-
-            loader.style.display = 'block';
             gameControls.style.visibility = 'hidden';
             playerInfoContainer.style.visibility = 'hidden';
             tableContainer.style.visibility = 'hidden';
             gameControls.classList.remove('fade-in');
             playerInfoContainer.classList.remove('fade-in');
             tableContainer.classList.remove('fade-in');
-            feedbackP.classList.remove('correct-guess', 'incorrect-guess');
             guessesLeftDisplay.style.display = 'none';
-            hintButton.textContent = 'Get Hint';
             guessInput.disabled = true;
             guessButton.disabled = true;
             hintButton.disabled = true;
-
-            try {
-                const response = await fetch('/start_game', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
-                const data = await response.json();
-                loader.style.display = 'none';
-                if (data.error) {
-                    feedbackP.textContent = data.error;
-                    return;
-                }
-
-                // Styling for badge
-                //playerPositionP.innerHTML = `Position: ${data.position}`;
-                playerPositionP.innerHTML = `Position: <span class="position-badge">${data.position}</span>`;
-                
-                const difficulty = data.difficulty;
-                playerDifficultyDiv.textContent = `Difficulty: ${difficulty.toFixed(1)}`;
-                playerDifficultyDiv.className = 'difficulty-badge'; 
-                if (difficulty <= 3.5) {
-                    playerDifficultyDiv.classList.add('difficulty-easy');
-                } else if (difficulty <= 7.0) {
-                    playerDifficultyDiv.classList.add('difficulty-medium');
-                } else {
-                    playerDifficultyDiv.classList.add('difficulty-hard');
-                }
-
-                renderTable(data.stats);
-                
-                instructionTextP.textContent = "Guess the player based on their career stats:";
-                
-                guessInput.value = "";
-                guessInput.disabled = false;
-                guessButton.disabled = false;
-                hintButton.disabled = false;
-                statsTable.style.display = 'table';
-                
-                instructionTextP.style.visibility = 'visible';
-                instructionTextP.classList.add('fade-in');
-                gameControls.style.visibility = 'visible';
-                playerInfoContainer.style.visibility = 'visible';
-                tableContainer.style.visibility = 'visible';
-                playerDifficultyDiv.style.visibility = 'visible';
-                gameControls.classList.add('fade-in');
-                playerInfoContainer.classList.add('fade-in');
-                tableContainer.classList.add('fade-in');
-                playerDifficultyDiv.classList.add('fade-in');
-            } catch (error) {
-                loader.style.display = 'none';
-                feedbackP.textContent = "Failed to start the game. Please try again.";
-                console.error("Start Game Error:", error);
-            }
+            gameView.style.display = 'block';
+            resultsView.style.display = 'none';
         }
-        
+
+        function revealGameUI() {
+            instructionTextP.style.visibility = 'visible';
+            instructionTextP.classList.add('fade-in');
+            gameControls.style.visibility = 'visible';
+            playerInfoContainer.style.visibility = 'visible';
+            tableContainer.style.visibility = 'visible';
+            playerDifficultyDiv.style.visibility = 'visible';
+            gameControls.classList.add('fade-in');
+            playerInfoContainer.classList.add('fade-in');
+            tableContainer.classList.add('fade-in');
+            playerDifficultyDiv.classList.add('fade-in');
+        }
+
+        // Reveal tier mirrors the actual hint order (Conference -> Division -> Team),
+        // so the table never shows more than the hints already unlocked this round.
+        function revealTierFromGuessesLeft(guessesLeft) {
+            if (guessesLeft === undefined || guessesLeft === null || guessesLeft >= 4) return 0;
+            if (guessesLeft === 3) return 1; // conference
+            if (guessesLeft === 2) return 2; // conference + division
+            return 3; // conference + division + team
+        }
+
+        function formatTeamReveal(statRow, tier) {
+            if (tier <= 0) return '';
+            const tm = statRow.Tm || 'N/A';
+            const conf = (statRow.Conference && statRow.Conference !== 'N/A') ? statRow.Conference : null;
+            const div = (statRow.Division && statRow.Division !== 'N/A') ? statRow.Division : null;
+            if (tier === 1) return conf || '';
+            if (tier === 2) return conf && div ? `${conf}-${div.charAt(0)}` : (conf || '');
+            return conf && div ? `${tm} · ${conf}-${div.charAt(0)}` : tm;
+        }
+
+        function updateTeamReveal(guessesLeft) {
+            const tier = revealTierFromGuessesLeft(guessesLeft);
+            const rows = statsTable.querySelectorAll('tbody tr');
+            rows.forEach((row, i) => {
+                const statRow = currentStatsData[i];
+                const sub = row.querySelector('.team-sub');
+                if (!sub || !statRow) return;
+                sub.textContent = formatTeamReveal(statRow, tier);
+            });
+        }
+
         function renderTable(stats) {
             const tableBody = statsTable.querySelector("tbody");
             const tableHead = statsTable.querySelector("thead");
             tableBody.innerHTML = '';
             tableHead.innerHTML = '';
             if (!stats || stats.length === 0) return;
-            let desiredOrder = ["Year", "G", "PPR_Rank_by_Pos", "PPR" ]; 
+            const hasTeam = 'Tm' in stats[0];
+            let desiredOrder = ["Year", "G", "PPR_Rank_by_Pos", "PPR"];
             if (stats[0].FantPos === "QB") {
                 desiredOrder.push("PassYds", "PassTD", "RushYds", "RushTD");
             } else {
@@ -364,35 +621,49 @@
                 desiredOrder.forEach(headerText => {
                     if (Object.keys(stats[0]).includes(headerText)) {
                         const td = document.createElement("td");
-                        const value = statRow[headerText] != null ? statRow[headerText] : 'N/A';
-                        td.textContent = value;
-                        if (headerText === 'PPR_Rank_by_Pos' && !isNaN(value)) {
-                            const rank = parseInt(value, 10);
-                            if (rank <= 12) td.classList.add('highlight-green');
-                            else if (rank <= 24) td.classList.add('highlight-yellow');
-                            else td.classList.add('highlight-red');
+                        if (headerText === 'Year') {
+                            const teamLine = hasTeam ? `<span class="team-sub"></span>` : '';
+                            td.innerHTML = `${statRow.Year}${teamLine}`;
+                        } else {
+                            const value = statRow[headerText] != null ? statRow[headerText] : 'N/A';
+                            td.textContent = value;
+                            if (headerText === 'PPR_Rank_by_Pos' && !isNaN(value)) {
+                                const rank = parseInt(value, 10);
+                                if (rank <= 12) td.classList.add('highlight-green');
+                                else if (rank <= 24) td.classList.add('highlight-yellow');
+                                else td.classList.add('highlight-red');
+                            }
                         }
                         row.appendChild(td);
                     }
                 });
                 tableBody.appendChild(row);
             });
+            requestAnimationFrame(updateTableScrollAffordance);
         }
+
+        function updateTableScrollAffordance() {
+            const hasOverflow = tableContainer.scrollWidth > tableContainer.clientWidth + 2;
+            tableContainer.classList.toggle('has-overflow', hasOverflow);
+        }
+        tableContainer.addEventListener('scroll', () => {
+            const atEnd = tableContainer.scrollLeft + tableContainer.clientWidth >= tableContainer.scrollWidth - 2;
+            tableContainer.classList.toggle('has-overflow', !atEnd && tableContainer.scrollWidth > tableContainer.clientWidth + 2);
+        });
+
         async function submitGuess() {
             const guess = guessInput.value.trim();
             if (!guess) return;
             guessInput.value = '';
-            feedbackP.classList.remove('correct-guess', 'incorrect-guess');
+            feedbackP.classList.remove('correct-guess', 'incorrect-guess', 'shake');
             const response = await fetch('/guess', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ guess: guess }) });
             const data = await response.json();
             updateFeedbackAndGuesses(data);
-            if (data.result === 'correct' || data.result === 'out_of_guesses') {
-                endGame(data.result, data.guesses_taken);
-            }
+            if (data.round_complete) handleRoundComplete(data);
         }
         function handleHintOrGiveUp() { if (hintButton.textContent === 'Give Up?') giveUp(); else getHint(); }
         async function getHint() {
-            feedbackP.classList.remove('correct-guess', 'incorrect-guess');
+            feedbackP.classList.remove('correct-guess', 'incorrect-guess', 'shake');
             const response = await fetch('/hint', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
             const data = await response.json();
             updateFeedbackAndGuesses(data);
@@ -401,53 +672,132 @@
             const response = await fetch('/give_up', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
             const data = await response.json();
             updateFeedbackAndGuesses(data);
-            endGame(data.result, data.guesses_taken);
+            if (data.round_complete) handleRoundComplete(data);
+        }
+        function mdBold(text) {
+            return text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
         }
         function updateFeedbackAndGuesses(data) {
-            feedbackP.innerHTML = data.message;
+            feedbackP.innerHTML = mdBold(data.message);
             if (data.hint) {
-                feedbackP.innerHTML += `<br><br>${data.hint}`;
+                feedbackP.innerHTML += `<br><br>${mdBold(data.hint)}`;
             }
             if (data.guesses_left !== undefined) {
                 guessesLeftDisplay.textContent = `Guesses Left: ${data.guesses_left}`;
                 guessesLeftDisplay.style.display = 'block';
+                updateTeamReveal(data.guesses_left);
             } else {
                 guessesLeftDisplay.style.display = 'none';
             }
-            if(data.result === 'correct') {
-                feedbackP.classList.add('correct-guess');
+            feedbackP.classList.remove('correct-guess', 'incorrect-guess', 'hint-message', 'shake');
+            if (data.result === 'correct') {
+                feedbackP.classList.add('correct-guess', 'pop-in');
+            } else if (data.result === undefined) {
+                feedbackP.classList.add('hint-message');
             } else {
-                feedbackP.classList.add('incorrect-guess');
+                feedbackP.classList.add('incorrect-guess', 'shake');
             }
             if (data.is_last_guess) {
                 hintButton.textContent = 'Give Up?';
             }
         }
-        function endGame(result, guessesTaken) {
+        function handleRoundComplete(data) {
             guessInput.disabled = true;
             guessButton.disabled = true;
             hintButton.disabled = true;
-            showShareModal(result, guessesTaken);
-        }
-        function showShareModal(result, guessesTaken) {
-            const today = new Date();
-            const dateString = `${today.getMonth() + 1}/${today.getDate()}/${today.getFullYear()}`;
-            shareDate.textContent = dateString;
-            let grid = '';
-            let resultText = '';
-            if (result === 'correct') {
-                shareTitle.textContent = 'You got it!';
-                resultText = `FumbLe ${dateString}\n🏈 ${guessesTaken}/4`;
-                grid = '⬜'.repeat(guessesTaken - 1) + '🟩' + '⬜'.repeat(4-guessesTaken);
+            updateTeamReveal(1); // round's over -- show full team/conference/division context
+            roundResultsState = data.round_results;
+            renderStepper(data.round_results, data.next_tier);
+            if (data.daily_complete) {
+                setTimeout(() => renderFinalResults(data), 1400);
             } else {
-                shareTitle.textContent = 'Nice try!';
-                resultText = `FumbLe ${dateString}\n🏈 X/4`;
-                grid = '🟥🟥🟥🟥';
+                nextRoundButton.textContent = `Next Round: ${TIER_LABELS[data.next_tier]} ▶`;
+                nextRoundPanel.classList.add('active');
             }
-            shareGrid.textContent = grid;
-            shareableText = `${resultText}\n${grid}`;
+        }
+
+        // --- Final results / share ---
+        function renderFinalResults(data) {
+            gameView.style.display = 'none';
+            resultsView.style.display = 'block';
+            nextRoundPanel.classList.remove('active');
+
+            const total = data.total_score;
+            const roundCount = data.round_results.length || totalRoundsState;
+            const perfect = roundCount; // best possible: 1 guess per round
+            const worst = roundCount * 4; // worst possible without failing: 4 guesses per round
+            let headline = 'Tough one today!';
+            if (total <= perfect + 1) headline = 'Incredible run!';
+            else if (total <= worst * 0.6) headline = 'Great job!';
+            else if (total <= worst) headline = 'Nice try!';
+            shareTitle.textContent = headline;
+
+            const dateObj = data.date ? new Date(`${data.date}T00:00:00`) : new Date();
+            const dateString = `${dateObj.getMonth() + 1}/${dateObj.getDate()}/${dateObj.getFullYear()}`;
+            shareDate.textContent = dateString;
+            scoreValue.textContent = total;
+
+            resultsRows.innerHTML = '';
+            const lines = [];
+            data.round_results.forEach(r => {
+                const tier = r.tier;
+                const label = r.label || TIER_LABELS[tier] || tier;
+                const row = document.createElement('div');
+                row.className = `result-row tier-${tier}`;
+                const scoreText = r.solved ? `${r.score}/4` : `X (+${r.score})`;
+                row.innerHTML = `<span class="rr-tier"><span class="rr-tier-dot"></span>${label}</span><span class="rr-score ${r.solved ? 'solved' : 'failed'}">${scoreText}</span>`;
+                resultsRows.appendChild(row);
+                lines.push(`${TIER_EMOJI[tier] || '⬜'} ${label}: ${scoreText}`);
+            });
+
+            shareableText = `FumbLe ${dateString}\n${lines.join('\n')}\nTotal score: ${total}`;
+
+            const streak = updateStreak(data.date);
+            streakLine.textContent = streak > 1 ? `🔥 ${streak} day streak` : (streak === 1 ? 'First win of your streak — come back tomorrow!' : '');
+
+            startCountdown();
             shareModal.classList.add('active');
         }
+
+        function updateStreak(dateStr) {
+            const today = dateStr || new Date().toISOString().slice(0, 10);
+            let record;
+            try { record = JSON.parse(localStorage.getItem('fumble_streak') || 'null'); } catch (e) { record = null; }
+            if (!record) record = { lastDate: null, streak: 0 };
+            if (record.lastDate === today) return record.streak;
+            const prev = new Date(`${today}T00:00:00`);
+            prev.setDate(prev.getDate() - 1);
+            const prevStr = prev.toISOString().slice(0, 10);
+            record.streak = (record.lastDate === prevStr) ? record.streak + 1 : 1;
+            record.lastDate = today;
+            localStorage.setItem('fumble_streak', JSON.stringify(record));
+            return record.streak;
+        }
+
+        function getNyNow() {
+            const parts = new Intl.DateTimeFormat('en-US', {
+                timeZone: 'America/New_York', hour12: false,
+                year: 'numeric', month: '2-digit', day: '2-digit',
+                hour: '2-digit', minute: '2-digit', second: '2-digit'
+            }).formatToParts(new Date());
+            const get = t => parts.find(p => p.type === t).value;
+            return new Date(`${get('year')}-${get('month')}-${get('day')}T${get('hour')}:${get('minute')}:${get('second')}`);
+        }
+        function startCountdown() {
+            if (countdownTimer) clearInterval(countdownTimer);
+            const tick = () => {
+                const now = getNyNow();
+                const next = new Date(now);
+                next.setHours(24, 0, 0, 0);
+                let diff = Math.max(0, next - now);
+                const h = Math.floor(diff / 3600000);
+                const m = Math.floor((diff % 3600000) / 60000);
+                countdownLine.textContent = `Next FumbLe in ${h}h ${m}m`;
+            };
+            tick();
+            countdownTimer = setInterval(tick, 30000);
+        }
+
         function copyResultsToClipboard() {
             const textArea = document.createElement('textarea');
             textArea.value = shareableText;
@@ -460,6 +810,7 @@
             } catch (err) { console.error('Failed to copy text: ', err); }
             document.body.removeChild(textArea);
         }
+
         function debounce(func, delay) {
             return function(...args) {
                 clearTimeout(debounceTimeout);
