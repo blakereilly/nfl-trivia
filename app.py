@@ -185,6 +185,12 @@ ROUND_TIERS = ['easy', 'hard']
 TIER_LABELS = {'easy': 'Easy', 'hard': 'Hard'}
 FAIL_PENALTY = 5
 
+#TEMPORARY: while showing this off before the "daily" mechanic is finalized, every
+#playthrough serves fresh random players and can be replayed endlessly instead of
+#locking to one deterministic pair per calendar day. Flip to False to go live as a
+#true daily game (same 2 players for everyone each day, one playthrough per day).
+RANDOM_MODE = True
+
 def today_str():
     return datetime.now(GAME_TZ).date().isoformat()
 
@@ -206,6 +212,13 @@ def get_daily_player(tier, game_date, seed_override=None):
     rotation = TIER_ROTATIONS[tier]
     day_index = seed_override if seed_override is not None else (game_date - EPOCH_DATE).days
     return rotation[day_index % len(rotation)]
+
+#Picks the player for a round: a true random pick while RANDOM_MODE is on, otherwise
+#the deterministic daily pick (same player for everyone, all day)
+def pick_player(tier, game_date, seed_override=None):
+    if RANDOM_MODE:
+        return random.choice(TIER_POOLS[tier])
+    return get_daily_player(tier, game_date, seed_override=seed_override)
 
 #If a player has played for different teams for same amount of seasons, tiebreaker goes to recent.
 #This function is called within the game routes
@@ -252,15 +265,17 @@ def get_player_payload(selected_player_name):
         'rookie_year': rookie_year,
     }
 
+def reset_round_state():
+    session['game_date'] = today_str()
+    session['round_index'] = 0
+    session['round_results'] = []
+    for key in ['correct_player_name', 'correct_player_display', 'guesses_remaining', 'correct_last_name', 'hints', 'current_tier', 'current_position', 'dev_seed']:
+        session.pop(key, None)
+
 #Resets round progress whenever the calendar day (in GAME_TZ) has rolled over
 def ensure_daily_session():
-    today = today_str()
-    if session.get('game_date') != today:
-        session['game_date'] = today
-        session['round_index'] = 0
-        session['round_results'] = []
-        for key in ['correct_player_name', 'correct_player_display', 'guesses_remaining', 'correct_last_name', 'hints', 'current_tier', 'current_position', 'dev_seed']:
-            session.pop(key, None)
+    if session.get('game_date') != today_str():
+        reset_round_state()
 
 def begin_round(player_name, tier):
     info = get_player_payload(player_name)
@@ -326,7 +341,7 @@ def home():
 #Render and return Game html
 @app.route('/game')
 def game_page():
-    return render_template('game.html', dev_mode=app.debug)
+    return render_template('game.html', dev_mode=app.debug, random_mode=RANDOM_MODE)
 
 #Tells the frontend where the player is in today's game so a refresh resumes correctly
 @app.route('/daily_status', methods=['GET'])
@@ -352,12 +367,8 @@ def daily_status():
 def dev_new_game():
     if not app.debug:
         return jsonify({'error': 'not available'}), 404
-    session['game_date'] = today_str()
+    reset_round_state()
     session['dev_seed'] = random.randint(0, 1_000_000)
-    session['round_index'] = 0
-    session['round_results'] = []
-    for key in ['correct_player_name', 'correct_player_display', 'guesses_remaining', 'correct_last_name', 'hints', 'current_tier', 'current_position']:
-        session.pop(key, None)
     return jsonify({'ok': True})
 
 #This is where the magic happens
@@ -366,18 +377,23 @@ def start_game():
     ensure_daily_session()
     round_index = session.get('round_index', 0)
     if round_index >= len(ROUND_TIERS):
-        round_results = session.get('round_results', [])
-        return jsonify({
-            'error': 'daily_complete',
-            'round_results': round_results,
-            'total_score': sum(r['score'] for r in round_results),
-        })
+        if RANDOM_MODE:
+            #No daily lock while testing live -- starting again just deals a fresh pair
+            reset_round_state()
+            round_index = 0
+        else:
+            round_results = session.get('round_results', [])
+            return jsonify({
+                'error': 'daily_complete',
+                'round_results': round_results,
+                'total_score': sum(r['score'] for r in round_results),
+            })
     tier = ROUND_TIERS[round_index]
     #If this round is already in progress (e.g. page refresh), resume it instead of re-rolling a player
     if session.get('current_tier') == tier and 'correct_player_name' in session:
         return jsonify(resume_round())
     game_date = date.fromisoformat(session['game_date'])
-    player_name = get_daily_player(tier, game_date, seed_override=session.get('dev_seed'))
+    player_name = pick_player(tier, game_date, seed_override=session.get('dev_seed'))
     return jsonify(begin_round(player_name, tier))
 
 @app.route('/suggest_players', methods=['POST'])

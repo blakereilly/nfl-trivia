@@ -338,6 +338,9 @@
                 <div class="results-rows" id="resultsRows"></div>
                 <p class="streak-line" id="streakLine"></p>
                 <p class="countdown-line" id="countdownLine"></p>
+                {% if random_mode %}
+                <button id="playAgainButton" style="margin-bottom:10px;">🔄 Play Again</button>
+                {% endif %}
                 <div class="share-buttons">
                     <button id="share-game-button">Share Game</button>
                     <button id="copy-results-button" class="hint-button">Copy Results</button>
@@ -400,6 +403,7 @@
         const shareUrlInput = document.getElementById('share-url-input');
         const copyUrlButton = document.getElementById('copy-url-button');
 
+        const RANDOM_MODE = {{ 'true' if random_mode else 'false' }};
         const columnMap = { "Year": "Yr", "G": "Games", "PPR": "PPR Pts", "PPR_Rank_by_Pos": "PPR Rank", "PassYds": "Pass Yd", "PassTD": "Pass TD", "Rec": "Rec", "RecYds": "Rec Yd", "RecTD": "Rec TD", "RushYds": "Rush Yd", "RushTD": "Rush TD", };
         const TIER_LABELS = { easy: 'Easy', hard: 'Hard' };
         const TIER_EMOJI = { easy: '🟩', hard: '🟥' };
@@ -418,6 +422,16 @@
                 await fetch('/dev/new_game', { method: 'POST' });
                 devResetButton.disabled = false;
                 init();
+            });
+        }
+
+        const playAgainButton = document.getElementById('playAgainButton');
+        if (playAgainButton) {
+            playAgainButton.addEventListener('click', () => {
+                shareModal.classList.remove('active');
+                if (countdownTimer) clearInterval(countdownTimer);
+                roundResultsState = [];
+                startRound();
             });
         }
 
@@ -753,9 +767,13 @@
             shareableText = `FumbLe ${dateString}\n${lines.join('\n')}\nTotal score: ${total}`;
 
             const streak = updateStreak(data.date);
-            streakLine.textContent = streak > 1 ? `🔥 ${streak} day streak` : (streak === 1 ? 'First win of your streak — come back tomorrow!' : '');
-
-            startCountdown();
+            if (RANDOM_MODE) {
+                streakLine.textContent = streak > 1 ? `🔥 ${streak} day streak` : '';
+                countdownLine.textContent = '';
+            } else {
+                streakLine.textContent = streak > 1 ? `🔥 ${streak} day streak` : (streak === 1 ? 'First win of your streak — come back tomorrow!' : '');
+                startCountdown();
+            }
             shareModal.classList.add('active');
         }
 
