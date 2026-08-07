@@ -14,7 +14,7 @@ base_dir = os.path.join(os.path.dirname(__file__), 'stats')
 processed_data_path = os.path.join(base_dir, 'combined_stats.csv')
 #Define earliest year for eligible players
 EARLIEST_YEAR = 2011
-years = range(2010, 2025)
+years = range(2010, 2026)
 #Initialize data frames as a list
 all_dfs = []
 
